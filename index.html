@@ -1,939 +1,440 @@
 <!DOCTYPE html>
-<html lang="vi" class="dark">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Docker & Docker Compose - Cẩm Nang Trực Quan Toàn Tập</title>
+    <title>DevMastery Central Hub - Cổng Học Tập & Lập Trình AI, DevOps</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Config for Premium Tech Theme -->
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        docker: {
-                            light: '#0db7ed',
-                            DEFAULT: '#099cec',
-                            dark: '#006699',
-                            slate: '#0f172a'
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                            cyan: '#06b6d4',
+                            emerald: '#10b981'
                         }
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['Fira Code', 'Courier New', 'monospace']
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
         }
     </script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- React and ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts: Plus Jakarta Sans for futuristic look -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #030712; /* Extreme dark */
         }
-        .code-font {
-            font-family: 'Fira Code', monospace;
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
-            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: #030712;
         }
         ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
+            background: #1f2937;
+            border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #099cec;
+            background: #8b5cf6;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen transition-colors duration-300">
+<body class="text-slate-100 transition-colors duration-300">
+    <div id="root"></div>
 
-    <!-- Custom Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800 border-l-4 border-emerald-500 text-white px-4 py-3 rounded-lg shadow-xl translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-3 pointer-events-none">
-        <i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
-        <span id="toast-message" class="text-sm font-medium">Đã sao chép vào bộ nhớ tạm!</span>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-    <!-- Header Navigation -->
-    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-docker p-2 rounded-lg text-white shadow-lg shadow-docker/20 animate-pulse">
-                        <i class="fa-brands fa-docker text-2xl"></i>
-                    </div>
-                    <div>
-                        <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-docker-light to-blue-500 bg-clip-text text-transparent">DOCKER LAB</span>
-                        <span class="hidden sm:inline-block ml-2 text-xs bg-slate-800 px-2 py-0.5 rounded text-docker-light border border-slate-700 font-mono">v2026.1</span>
-                    </div>
-                </div>
-                <!-- Menu / Navigation Links -->
-                <nav class="hidden md:flex space-x-1">
-                    <button onclick="switchTab('overview')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-docker bg-slate-800/80 border border-slate-700/50" id="tab-overview">Tổng Quan & Mô Hình</button>
-                    <button onclick="switchTab('dockerfile')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white" id="tab-dockerfile">Dockerfile</button>
-                    <button onclick="switchTab('compose')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white" id="tab-compose">Docker Compose</button>
-                    <button onclick="switchTab('commands')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white" id="tab-commands">Tra Cứu Lệnh</button>
-                    <a href="roadmap.html" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white" >Roadmap</a>
-                </nav>
-                <div class="flex items-center space-x-2">
-                    <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 transition-colors">
-                        <i class="fa-solid fa-sun" id="theme-icon"></i>
-                    </button>
-                    <a href="https://docs.docker.com/" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg font-medium transition-colors hidden sm:flex items-center gap-1.5">
-                        <i class="fa-solid fa-book"></i> Docker Docs
-                    </a>
-                </div>
-            </div>
-        </div>
-        <!-- Mobile Navigation Menu -->
-        <div class="md:hidden bg-slate-900 border-t border-slate-800 flex justify-around py-2">
-            <button onclick="switchTab('overview')" class="tab-btn-mobile flex flex-col items-center text-xs text-docker" id="m-tab-overview">
-                <i class="fa-solid fa-cubes text-base mb-1"></i>
-                Mô hình
-            </button>
-            <button onclick="switchTab('dockerfile')" class="tab-btn-mobile flex flex-col items-center text-xs text-slate-400" id="m-tab-dockerfile">
-                <i class="fa-solid fa-file-code text-base mb-1"></i>
-                Dockerfile
-            </button>
-            <button onclick="switchTab('compose')" class="tab-btn-mobile flex flex-col items-center text-xs text-slate-400" id="m-tab-compose">
-                <i class="fa-solid fa-network-wired text-base mb-1"></i>
-                Compose
-            </button>
-            <button onclick="switchTab('commands')" class="tab-btn-mobile flex flex-col items-center text-xs text-slate-400" id="m-tab-commands">
-                <i class="fa-solid fa-terminal text-base mb-1"></i>
-                Lệnh
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Content Body -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        <!-- SECTION 1: OVERVIEW & INTERACTIVE MODEL -->
-        <section id="section-overview" class="tab-content block space-y-8">
-            <!-- Intro Card -->
-            <div class="bg-gradient-to-r from-slate-800 to-slate-850 p-6 rounded-2xl border border-slate-700/60 shadow-xl relative overflow-hidden">
-                <div class="absolute -right-16 -top-16 opacity-10 text-[12rem] text-docker pointer-events-none">
-                    <i class="fa-brands fa-docker"></i>
-                </div>
-                <h1 class="text-3xl font-extrabold tracking-tight mb-2">Docker là gì?</h1>
-                <p class="text-slate-300 max-w-3xl text-base leading-relaxed">
-                    Docker là một nền tảng mã nguồn mở cho phép bạn tự động đóng gói ứng dụng và tất cả các thành phần phụ thuộc của nó (libraries, config, environment) vào một <span class="text-docker-light font-bold">Container</span>. Container này có thể hoạt động nhất quán trên bất kỳ hệ điều hành nào từ máy cá nhân (Local) đến máy chủ đám mây (Cloud).
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-start space-x-3">
-                        <i class="fa-solid fa-bolt text-amber-400 text-xl mt-1"></i>
-                        <div>
-                            <h4 class="font-bold text-slate-200">Khởi động siêu tốc</h4>
-                            <p class="text-xs text-slate-400 mt-1">Khởi động các dịch vụ chỉ trong vài giây thay vì vài phút như Máy ảo (VM).</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-start space-x-3">
-                        <i class="fa-solid fa-layer-group text-sky-400 text-xl mt-1"></i>
-                        <div>
-                            <h4 class="font-bold text-slate-200">Cô lập hoàn toàn</h4>
-                            <p class="text-xs text-slate-400 mt-1">Tránh xung đột môi trường (Ví dụ chạy song song PHP 7.4 và PHP 8.2).</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-start space-x-3">
-                        <i class="fa-solid fa-feather text-emerald-400 text-xl mt-1"></i>
-                        <div>
-                            <h4 class="font-bold text-slate-200">Tiết kiệm tài nguyên</h4>
-                            <p class="text-xs text-slate-400 mt-1">Sử dụng chung nhân (Kernel) của hệ điều hành máy chủ, vô cùng gọn nhẹ.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Interactive Visual Model Structure -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Interactive Diagram Area -->
-                <div class="lg:col-span-7 bg-slate-850 p-6 rounded-2xl border border-slate-700/60 shadow-xl flex flex-col justify-between">
-                    <div>
-                        <h2 class="text-xl font-bold mb-1 flex items-center gap-2">
-                            <i class="fa-solid fa-diagram-project text-docker-light"></i>
-                            Mô Hình Đối Tượng (Objects Model)
-                        </h2>
-                        <p class="text-xs text-slate-400 mb-6">Nhấp vào một đối tượng dưới đây để xem cách chúng tương tác và giải thích chi tiết.</p>
-                    </div>
-
-                    <!-- Visual Nodes -->
-                    <div class="relative py-12 flex flex-col items-center justify-center space-y-10">
-                        <!-- Connecting SVGs backdrop -->
-                        <div class="absolute inset-0 z-0 pointer-events-none opacity-40">
-                            <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                                <!-- Connection lines with animations -->
-                                <line x1="50%" y1="18%" x2="50%" y2="45%" stroke="#099cec" stroke-width="2" stroke-dasharray="6,4" />
-                                <line x1="50%" y1="55%" x2="25%" y2="80%" stroke="#e2e8f0" stroke-width="2" />
-                                <line x1="50%" y1="55%" x2="75%" y2="80%" stroke="#e2e8f0" stroke-width="2" />
-                            </svg>
-                        </div>
-
-                        <!-- 1. IMAGE NODE (The Blueprint) -->
-                        <div onclick="selectObject('image')" id="node-image" class="z-10 group cursor-pointer bg-slate-800 hover:bg-sky-950/40 border-2 border-slate-700 hover:border-docker transition-all duration-300 rounded-xl p-4 w-72 text-center shadow-lg transform hover:-translate-y-1">
-                            <div class="inline-flex p-3 rounded-full bg-slate-900 group-hover:bg-docker/10 text-docker-light group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-box-open text-2xl"></i>
-                            </div>
-                            <h3 class="font-bold text-slate-200 mt-2 text-sm uppercase tracking-wider">Image (Ảnh Tĩnh)</h3>
-                            <p class="text-xs text-slate-400 mt-1">"Bản thiết kế" đóng gói ứng dụng</p>
-                        </div>
-
-                        <!-- 2. CONTAINER NODE (The Running Instance) -->
-                        <div onclick="selectObject('container')" id="node-container" class="z-10 group cursor-pointer bg-slate-800 hover:bg-sky-950/40 border-2 border-slate-700 hover:border-docker transition-all duration-300 rounded-xl p-4 w-72 text-center shadow-lg transform hover:-translate-y-1">
-                            <div class="inline-flex p-3 rounded-full bg-slate-900 group-hover:bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-cube text-2xl"></i>
-                            </div>
-                            <h3 class="font-bold text-slate-200 mt-2 text-sm uppercase tracking-wider">Container (Tiến Trình)</h3>
-                            <p class="text-xs text-slate-400 mt-1">Một "thực thể chạy" từ Image</p>
-                        </div>
-
-                        <!-- 3. Network & Volume Split Nodes -->
-                        <div class="w-full flex justify-around max-w-lg z-10">
-                            <!-- Volume (Storage) -->
-                            <div onclick="selectObject('volume')" id="node-volume" class="group cursor-pointer bg-slate-800 hover:bg-sky-950/40 border-2 border-slate-700 hover:border-docker transition-all duration-300 rounded-xl p-4 w-52 text-center shadow-lg transform hover:-translate-y-1">
-                                <div class="inline-flex p-2.5 rounded-full bg-slate-900 group-hover:bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-hard-drive text-xl"></i>
-                                </div>
-                                <h3 class="font-bold text-slate-200 mt-2 text-xs uppercase tracking-wider">Volume (Ổ Đĩa)</h3>
-                                <p class="text-[11px] text-slate-400 mt-1">Lưu trữ dữ liệu bền vững</p>
-                            </div>
-
-                            <!-- Network (Communication) -->
-                            <div onclick="selectObject('network')" id="node-network" class="group cursor-pointer bg-slate-800 hover:bg-sky-950/40 border-2 border-slate-700 hover:border-docker transition-all duration-300 rounded-xl p-4 w-52 text-center shadow-lg transform hover:-translate-y-1">
-                                <div class="inline-flex p-2.5 rounded-full bg-slate-900 group-hover:bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-network-wired text-xl"></i>
-                                </div>
-                                <h3 class="font-bold text-slate-200 mt-2 text-xs uppercase tracking-wider">Network (Mạng)</h3>
-                                <p class="text-[11px] text-slate-400 mt-1">Kết nối các Container</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Object Detailed Explanation Board -->
-                <div class="lg:col-span-5 bg-slate-850 p-6 rounded-2xl border border-slate-700/60 shadow-xl flex flex-col justify-between min-h-[480px]">
-                    <div>
-                        <div class="flex items-center space-x-3 mb-4">
-                            <span class="text-xs uppercase px-2.5 py-1 bg-docker/10 text-docker-light rounded-full font-bold tracking-wider">Chi Tiết Cấu Trúc</span>
-                            <span class="text-xs text-slate-400">Click vào đối tượng để chuyển đổi</span>
-                        </div>
-                        
-                        <!-- Content container that dynamically switches via JS -->
-                        <div id="object-details-content" class="transition-all duration-300">
-                            <!-- Default: Container detail -->
-                            <div class="space-y-4">
-                                <div class="flex items-center space-x-3 text-emerald-400">
-                                    <i class="fa-solid fa-cube text-3xl"></i>
-                                    <h3 class="text-2xl font-extrabold">Container là gì?</h3>
-                                </div>
-                                <p class="text-slate-300 text-sm leading-relaxed">
-                                    Nếu <strong>Image</strong> là bản thiết kế trên giấy, thì <strong>Container</strong> là ngôi nhà thực sự được xây dựng từ bản thiết kế đó. Nó hoạt động độc lập và hoàn toàn cô lập với hệ thống chủ cũng như các container khác.
-                                </p>
-                                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Đặc tính kỹ thuật:</h4>
-                                    <ul class="text-xs text-slate-300 space-y-2">
-                                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> <span>Có tiến trình (process) chạy độc lập, tài nguyên RAM/CPU được cấp phát cô lập.</span></li>
-                                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> <span>Được tạo ra, khởi động, tạm dừng hoặc xóa đi bất cứ lúc nào một cách nhanh chóng.</span></li>
-                                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> <span>Dữ liệu bên trong Container sẽ mất đi khi Container bị xóa (trừ khi dùng Volumes).</span></li>
-                                    </ul>
-                                </div>
-                                <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg text-xs font-mono text-slate-300">
-                                    <span class="text-docker-light"># Tạo & chạy một container:</span><br>
-                                    docker run -d --name my-app -p 8080:80 nginx
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Legend / Quick Tip -->
-                    <div class="border-t border-slate-800 pt-4 mt-6">
-                        <div class="flex items-center space-x-3 text-slate-400 text-xs">
-                            <i class="fa-solid fa-lightbulb text-amber-400 text-lg"></i>
-                            <span>Mẹo nhanh: Bạn có thể liên kết các Container lại với nhau trong một mạng cục bộ (Network) và đồng bộ tệp dữ liệu ra ngoài (Volume) để tránh mất dữ liệu.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 2: DOCKERFILE LAB -->
-        <section id="section-dockerfile" class="tab-content hidden space-y-8">
-            <div class="bg-slate-850 p-6 rounded-2xl border border-slate-700/60 shadow-xl">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-file-code text-docker-light"></i>
-                            Cấu Trúc File Dockerfile
-                        </h2>
-                        <p class="text-sm text-slate-400 mt-1">Dockerfile là file văn bản chứa danh sách các chỉ thị để Docker Engine xây dựng nên một Docker Image tự động.</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 text-docker-light">
-                            <i class="fa-solid fa-mouse-pointer"></i> Di chuột vào từng dòng để xem giải thích
-                        </span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <!-- Interactive Code Panel -->
-                    <div class="lg:col-span-7 bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-2xl relative">
-                        <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/60 rounded-t-xl">
-                            <div class="flex items-center space-x-1.5">
-                                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                                <span class="text-xs text-slate-400 font-mono ml-2">Dockerfile</span>
-                            </div>
-                            <button onclick="copyToClipboard('dockerfile-code')" class="p-1 hover:text-docker-light transition-colors text-slate-400 text-xs flex items-center gap-1">
-                                <i class="fa-regular fa-copy"></i> Sao chép
-                            </button>
-                        </div>
-                        <pre id="dockerfile-code" class="p-6 overflow-x-auto code-font text-sm leading-relaxed text-slate-300">
-<!-- Hoverable lines -->
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="from"><span class="text-pink-400 font-bold">FROM</span> node:18-alpine</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="label"><span class="text-pink-400 font-bold">LABEL</span> maintainer="admin@docker.lab"</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="workdir"><span class="text-pink-400 font-bold">WORKDIR</span> /usr/src/app</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="copy1"><span class="text-pink-400 font-bold">COPY</span> package*.json ./</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="run"><span class="text-pink-400 font-bold">RUN</span> npm ci --only=production</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="copy2"><span class="text-pink-400 font-bold">COPY</span> . .</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="env"><span class="text-pink-400 font-bold">ENV</span> PORT=3000 NODE_ENV=production</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="expose"><span class="text-pink-400 font-bold">EXPOSE</span> 3000</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="volume"><span class="text-pink-400 font-bold">VOLUME</span> [ "/usr/src/app/data" ]</span>
-<span class="df-line cursor-pointer block hover:bg-slate-800/80 p-1.5 rounded transition-all" data-cmd="cmd"><span class="text-pink-400 font-bold">CMD</span> [ "node", "server.js" ]</span>
-                        </pre>
-                    </div>
-
-                    <!-- Explainer Side Board -->
-                    <div class="lg:col-span-5 flex flex-col justify-between">
-                        <div id="df-explainer" class="bg-slate-800/40 border border-slate-700/50 p-6 rounded-xl space-y-4">
-                            <h3 class="text-lg font-bold text-docker-light flex items-center gap-1.5">
-                                <i class="fa-solid fa-info-circle"></i>
-                                Giải Thích Từ Khóa
-                            </h3>
-                            <p class="text-slate-300 text-sm leading-relaxed" id="df-explain-text">
-                                Hãy di chuột hoặc nhấp vào bất kỳ dòng nào trong Dockerfile bên trái để xem giải thích chi tiết về chỉ thị đó, cách hoạt động và lưu ý quan trọng khi lập trình thực tế.
-                            </p>
-                        </div>
-
-                        <!-- Best practices area -->
-                        <div class="bg-gradient-to-br from-indigo-950/20 to-slate-900 p-5 rounded-xl border border-slate-800 mt-6">
-                            <h4 class="font-bold text-sm text-indigo-400 flex items-center gap-1.5 mb-2">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                Dockerfile Best Practices
-                            </h4>
-                            <ul class="text-xs text-slate-400 space-y-2 list-disc pl-4 leading-relaxed">
-                                <li>Hãy luôn sử dụng các bản phân phối Linux gọn nhẹ như <code class="text-docker-light">alpine</code> để giảm tối đa kích thước Image.</li>
-                                <li>Tận dụng cơ chế <strong>Caching Layer</strong> bằng cách chạy lệnh copy package cấu hình trước khi copy toàn bộ source code.</li>
-                                <li>Đặt file <code class="text-docker-light">.dockerignore</code> để tránh đóng gói nhầm thư mục rác như <code class="text-slate-400">node_modules</code> hoặc <code class="text-slate-400">.git</code>.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: DOCKER COMPOSE LAB -->
-        <section id="section-compose" class="tab-content hidden space-y-8">
-            <div class="bg-slate-850 p-6 rounded-2xl border border-slate-700/60 shadow-xl">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-cubes-stacked text-docker-light"></i>
-                            Cấu Trúc Docker Compose (docker-compose.yml)
-                        </h2>
-                        <p class="text-sm text-slate-400 mt-1">Docker Compose là một công cụ giúp định nghĩa và quản lý các ứng dụng đa container (Multi-container applications) chỉ qua một file YAML cấu hình duy nhất.</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <!-- Explainer Panel -->
-                    <div class="lg:col-span-5 flex flex-col justify-between order-2 lg:order-1">
-                        <div id="compose-explainer" class="bg-slate-800/40 border border-slate-700/50 p-6 rounded-xl space-y-4">
-                            <h3 class="text-lg font-bold text-docker-light flex items-center gap-1.5">
-                                <i class="fa-solid fa-code-fork"></i>
-                                Cấu trúc Compose cơ bản
-                            </h3>
-                            <p class="text-slate-300 text-sm leading-relaxed" id="compose-explain-text">
-                                Di chuột hoặc nhấp vào các phần được đánh dấu trong file YAML để khám phá:
-                            </p>
-                            <div class="space-y-3 text-xs text-slate-300">
-                                <div class="bg-slate-900/50 p-3 rounded border border-slate-800">
-                                    <strong class="text-docker-light block mb-1">Services:</strong>
-                                    Định nghĩa danh sách các container/dịch vụ cần chạy. Ở đây chúng ta có 2 dịch vụ: web (Webapp) và db (Cơ sở dữ liệu).
-                                </div>
-                                <div class="bg-slate-900/50 p-3 rounded border border-slate-800">
-                                    <strong class="text-amber-400 block mb-1">Ports:</strong>
-                                    Áp dụng chuyển hướng (mapping) từ Port cổng ngoài hệ điều hành vật lý vào Port hoạt động bên trong Container.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Compose Commands quick tip -->
-                        <div class="bg-gradient-to-br from-emerald-950/20 to-slate-900 p-5 rounded-xl border border-slate-800 mt-6">
-                            <h4 class="font-bold text-sm text-emerald-400 flex items-center gap-1.5 mb-2">
-                                <i class="fa-solid fa-circle-play"></i>
-                                Lệnh khởi chạy nhanh
-                            </h4>
-                            <p class="text-xs text-slate-400 leading-relaxed mb-3">Chạy toàn bộ cụm dịch vụ được định nghĩa trong file compose chỉ với 1 câu lệnh duy nhất:</p>
-                            <div class="bg-slate-900 p-3 rounded text-xs font-mono flex justify-between items-center border border-slate-800">
-                                <span class="text-emerald-400">docker compose up -d</span>
-                                <button onclick="copyToClipboardRaw('docker compose up -d')" class="text-slate-500 hover:text-white transition-colors"><i class="fa-solid fa-copy"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Interactive Code Panel (YAML) -->
-                    <div class="lg:col-span-7 bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-2xl relative order-1 lg:order-2">
-                        <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/60 rounded-t-xl">
-                            <div class="flex items-center space-x-1.5">
-                                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                                <span class="text-xs text-slate-400 font-mono ml-2">docker-compose.yml</span>
-                            </div>
-                            <button onclick="copyToClipboard('compose-code')" class="p-1 hover:text-docker-light transition-colors text-slate-400 text-xs flex items-center gap-1">
-                                <i class="fa-regular fa-copy"></i> Sao chép
-                            </button>
-                        </div>
-                        <pre id="compose-code" class="p-6 overflow-x-auto code-font text-sm leading-relaxed text-slate-300">
-<span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="version"><span class="text-sky-400 font-bold">version:</span> <span class="text-amber-300">'3.8'</span></span>
-<span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="services"><span class="text-sky-400 font-bold">services:</span></span>
-  <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="service-web">  <span class="text-emerald-400 font-bold">web:</span></span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="web-build">    <span class="text-sky-400">build:</span> .</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="web-ports">    <span class="text-sky-400">ports:</span></span>
-      - <span class="text-amber-300">"80:3000"</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="web-env">    <span class="text-sky-400">environment:</span></span>
-      - <span class="text-slate-300">DB_HOST=db</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="web-depends">    <span class="text-sky-400">depends_on:</span></span>
-      - <span class="text-slate-300">db</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="web-networks">    <span class="text-sky-400">networks:</span></span>
-      - <span class="text-slate-300">app-network</span>
-
-  <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="service-db">  <span class="text-emerald-400 font-bold">db:</span></span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="db-image">    <span class="text-sky-400">image:</span> postgres:15-alpine</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="db-volumes">    <span class="text-sky-400">volumes:</span></span>
-      - <span class="text-slate-300">db-data:/var/lib/postgresql/data</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="db-env">    <span class="text-sky-400">environment:</span></span>
-      - <span class="text-slate-300">POSTGRES_PASSWORD=secret123</span>
-    <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="db-networks">    <span class="text-sky-400">networks:</span></span>
-      - <span class="text-slate-300">app-network</span>
-
-<span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="top-volumes"><span class="text-sky-400 font-bold">volumes:</span></span>
-  <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="top-volumes-item">  <span class="text-emerald-400">db-data:</span></span>
-
-<span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="top-networks"><span class="text-sky-400 font-bold">networks:</span></span>
-  <span class="cmp-line cursor-pointer block hover:bg-slate-800/80 p-0.5 rounded transition-all" data-cmd="top-networks-item">  <span class="text-emerald-400">app-network:</span></span>
-                        </pre>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 4: INTERACTIVE CHEAT SHEET / COMMANDS -->
-        <section id="section-commands" class="tab-content hidden space-y-8">
-            <div class="bg-slate-850 p-6 rounded-2xl border border-slate-700/60 shadow-xl">
-                <!-- Search & Filters -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-terminal text-docker-light"></i>
-                            Bảng Tra Cứu Câu Lệnh (Interactive Cheat Sheet)
-                        </h2>
-                        <p class="text-sm text-slate-400 mt-1">Tìm kiếm nhanh chóng các câu lệnh phổ biến của Docker & Docker Compose để quản lý container.</p>
-                    </div>
-                    <!-- Search Input -->
-                    <div class="relative w-full md:w-80">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
-                        <input type="text" id="command-search" oninput="filterCommands()" placeholder="Tìm theo tên lệnh hoặc mô tả..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-docker text-slate-200 placeholder-slate-500">
-                    </div>
-                </div>
-
-                <!-- Command category filters -->
-                <div class="flex flex-wrap gap-2 mb-6">
-                    <button onclick="filterCategory('all')" class="cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-docker text-white transition-all">Tất cả</button>
-                    <button onclick="filterCategory('image')" class="cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">Quản lý Images</button>
-                    <button onclick="filterCategory('container')" class="cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">Quản lý Containers</button>
-                    <button onclick="filterCategory('compose')" class="cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">Docker Compose</button>
-                    <button onclick="filterCategory('cleanup')" class="cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">Dọn dẹp hệ thống</button>
-                    <button onclick="filterCategory('system')" class="cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">Thông tin & Mạng</button>
-                </div>
-
-                <!-- Commands Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="commands-container">
-                    <!-- Cards will be populated dynamic via JS -->
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-950 border-t border-slate-850 mt-16 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center space-x-2 text-slate-400 text-sm">
-                <i class="fa-brands fa-docker text-xl text-docker-light"></i>
-                <span>© 2026 Lab Giáo Trình Thực Hành Docker Trực Quan. Phát hành miễn phí.</span>
-            </div>
-            <div class="flex items-center space-x-4 text-xs text-slate-500">
-                <a href="https://github.com/docker" target="_blank" class="hover:text-docker-light transition-colors">GitHub</a>
-                <span>•</span>
-                <a href="https://hub.docker.com/" target="_blank" class="hover:text-docker-light transition-colors">Docker Hub</a>
-                <span>•</span>
-                <span class="text-slate-400">Hỗ trợ học tập bởi Gemini</span>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Custom JavaScript Logic -->
-    <script>
-        // Data for Interactive Architecture
-        const architectureData = {
-            image: {
-                title: "Docker Image (Ảnh Tĩnh)",
-                icon: "fa-solid fa-box-open text-docker-light",
-                desc: "Được định nghĩa từ các câu lệnh trong <strong>Dockerfile</strong>. Nó là tệp chỉ đọc (read-only), chứa hệ điều hành tối giản, thư viện ứng dụng, biến môi trường và mã nguồn code của ứng dụng.",
-                bullets: [
-                    "Được cấu tạo từ nhiều lớp dữ liệu (Layers) chồng lên nhau nhằm tối ưu bộ nhớ.",
-                    "Không thể sửa đổi sau khi đã được build thành công.",
-                    "Có thể được chia sẻ, tải lên và tải về qua Docker Hub."
-                ],
-                cmd: "docker build -t my-app-name ."
-            },
-            container: {
-                title: "Docker Container (Tiến trình)",
-                icon: "fa-solid fa-cube text-emerald-400",
-                desc: "Một thực thể hoạt động sống động được tạo ra khi khởi chạy một <strong>Image</strong>. Bạn có thể coi nó là một 'máy chủ tí hon' bị cô lập chạy bên trong máy tính của bạn.",
-                bullets: [
-                    "Sử dụng chung nhân Kernel của máy vật lý nên tiêu hao cực ít RAM/CPU.",
-                    "Lớp ghi-đọc (Read-Write Layer) ở trên cùng cho phép tạo các tệp tạm thời khi đang chạy.",
-                    "Sẽ mất hết dữ liệu mới phát sinh nếu Container bị xóa đi mà không cấu hình Volume."
-                ],
-                cmd: "docker run -d -p 80:80 --name web-running nginx"
-            },
-            volume: {
-                title: "Docker Volume (Ổ đĩa chia sẻ)",
-                icon: "fa-solid fa-hard-drive text-amber-400",
-                desc: "Là cơ chế chính thức để lưu trữ dữ liệu bền vững (Persistent Data) sinh ra từ Container. Volume map trực tiếp thư mục ngoài máy thật (Host) vào sâu trong máy Container.",
-                bullets: [
-                    "Dữ liệu được bảo toàn vẹn nguyên ngay cả khi Container bị hủy bỏ hoàn toàn.",
-                    "Có thể được chia sẻ dữ liệu đồng thời giữa nhiều container khác nhau.",
-                    "Bao gồm Bind Mounts (liên kết trực tiếp thư mục chỉ định) hoặc Named Volumes (do Docker tự quản lý)."
-                ],
-                cmd: "docker volume create my-database-data"
-            },
-            network: {
-                title: "Docker Network (Mạng nội bộ)",
-                icon: "fa-solid fa-network-wired text-purple-400",
-                desc: "Cho phép các Container có thể giao tiếp, trao đổi gói tin an toàn với nhau trong một mạng lưới nội bộ bảo mật mà không cần phải mở cổng (expose) ra thế giới bên ngoài.",
-                bullets: [
-                    "Cơ chế Bridge mặc định cung cấp khả năng phân giải tên (DNS nội bộ) tự động.",
-                    "Cơ chế Host cho phép Container sử dụng chung hoàn toàn cổng mạng của máy chủ vật lý.",
-                    "Cô lập bảo mật các cơ sở dữ liệu nhạy cảm bằng cách chỉ kết nối với cụm container Backend."
-                ],
-                cmd: "docker network create my-internal-net"
-            }
+        // Custom clean SVG Icons for reliable graphics
+        const Icons = {
+            AI: () => (
+                <svg className="w-10 h-10 text-brand-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+            ),
+            DevOps: () => (
+                <svg className="w-10 h-10 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            ),
+            ArrowRight: () => (
+                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            ),
+            Search: () => (
+                <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            ),
+            Terminal: () => (
+                <svg className="w-5 h-5 text-brand-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            ),
+            Check: () => (
+                <svg className="w-5 h-5 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+            ),
+            Bookmark: () => (
+                <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+            )
         };
 
-        // Data for Dockerfile tooltips
-        const dockerfileExplanations = {
-            from: {
-                title: "FROM node:18-alpine",
-                desc: "Khai báo Image gốc (Base Image) làm bệ phóng ban đầu. Ở đây ta chọn một bản phân phối siêu nhỏ gọn của Linux (Alpine) được cài đặt sẵn môi trường chạy NodeJS v18."
-            },
-            label: {
-                title: 'LABEL maintainer="..."',
-                desc: "Thêm siêu dữ liệu (Metadata) mô tả thông tin phụ như tên người phát triển, email liên hệ, hoặc phiên bản release giúp quản lý dễ dàng."
-            },
-            workdir: {
-                title: "WORKDIR /usr/src/app",
-                desc: "Thiết lập thư mục làm việc mặc định cho tất cả các chỉ thị tiếp theo (như RUN, COPY, CMD). Nếu thư mục chưa tồn tại, Docker sẽ tự động tạo mới."
-            },
-            copy1: {
-                title: "COPY package*.json ./",
-                desc: "Sao chép danh sách các tệp khai báo thư viện cần thiết từ máy thật vào thư mục làm việc hiện tại của Container."
-            },
-            run: {
-                title: "RUN npm ci --only=production",
-                desc: "Thực thi trực tiếp một câu lệnh shell khi build Image. Lệnh này tải và cài đặt toàn bộ các thư viện Node.js được khai báo ở trên vào hệ điều hành Container."
-            },
-            copy2: {
-                title: "COPY . .",
-                desc: "Sao chép toàn bộ các tệp mã nguồn từ thư mục làm việc máy thật hiện tại sang môi trường của Container (Không bao gồm những gì ghi trong .dockerignore)."
-            },
-            env: {
-                title: "ENV PORT=3000 NODE_ENV=...",
-                desc: "Khai báo các biến môi trường tĩnh (Environment Variables) trong Container giúp ứng dụng đọc được cấu hình cài đặt."
-            },
-            expose: {
-                title: "EXPOSE 3000",
-                desc: "Chỉ định cổng (Port) mạng ảo của container để tài liệu hóa. Nó hướng dẫn cho quản trị viên biết ứng dụng này lắng nghe cổng nào khi chạy."
-            },
-            volume: {
-                title: 'VOLUME [ "/usr/src/.../data" ]',
-                desc: "Khai báo một điểm kết nối thư mục bền vững. Giúp lưu tệp và cơ sở dữ liệu an toàn ra ngoài máy chủ để không bị mất khi container dừng hoạt động."
-            },
-            cmd: {
-                title: 'CMD [ "node", "server.js" ]',
-                desc: "Lệnh mặc định sẽ được chạy ngay khi Container bắt đầu khởi hành. Không giống như RUN thực hiện lúc tạo Image, CMD chỉ thực thi khi khởi chạy Container."
-            }
-        };
+        function App() {
+            const [searchQuery, setSearchQuery] = useState("");
+            const [aiProgress, setAiProgress] = useState(0);
+            const [devopsProgress, setDevopsProgress] = useState(0);
+            const [quickNotes, setQuickNotes] = useState("");
 
-        // Data for Compose tooltips
-        const composeExplanations = {
-            version: {
-                title: "version: '3.8'",
-                desc: "Định nghĩa phiên bản đặc tả kỹ thuật của Docker Compose mà tệp này đang áp dụng (phù hợp với phiên bản Docker Engine đang cài trên máy)."
-            },
-            services: {
-                title: "services:",
-                desc: "Nơi bắt đầu khai báo các dịch vụ/container độc lập của hệ thống. Các container này phối hợp nhịp nhàng với nhau."
-            },
-            "service-web": {
-                title: "web:",
-                desc: "Định nghĩa Container có tên là 'web'. Đây sẽ là máy chủ chạy ứng dụng chính của bạn."
-            },
-            "web-build": {
-                title: "build: .",
-                desc: "Yêu cầu Docker tự động build một Dockerfile mới từ thư mục hiện tại (.) thay vì tải trực tiếp image làm sẵn trên mạng."
-            },
-            "web-ports": {
-                title: "ports: '80:3000'",
-                desc: "Bản đồ ánh xạ mạng: Chuyển hướng các lượt truy cập vào cổng 80 ngoài máy thật trực tiếp tới cổng 3000 bên trong container web."
-            },
-            "web-env": {
-                title: "environment:",
-                desc: "Cấu hình biến môi trường trực tiếp cho Container. Ở đây, ta nói cho Webapp biết database đang được host tại dịch vụ 'db'."
-            },
-            "web-depends": {
-                title: "depends_on: - db",
-                desc: "Đảm bảo thứ tự khởi chạy hợp lý. Container cơ sở dữ liệu (db) bắt buộc phải khởi động thành công trước khi container web bắt đầu khởi hành."
-            },
-            "web-networks": {
-                title: "networks: - app-network",
-                desc: "Gia nhập container web này vào mạng nội bộ 'app-network' để dễ dàng trò chuyện với các thành phần khác."
-            },
-            "service-db": {
-                title: "db:",
-                desc: "Tạo thêm một container làm nhiệm vụ lưu trữ cơ sở dữ liệu có tên nội bộ là 'db'."
-            },
-            "db-image": {
-                title: "image: postgres:15-alpine",
-                desc: "Sử dụng trực tiếp hình ảnh PostgreSQL phiên bản 15 gọn nhẹ được phân phối chính thức trên kho ứng dụng Docker Hub."
-            },
-            "db-volumes": {
-                title: "volumes:",
-                desc: "Gắn ổ đĩa dữ liệu của DB ra bên ngoài hệ điều hành máy thật thông qua Named Volume tên 'db-data' để lưu trữ lâu dài."
-            },
-            "db-env": {
-                title: "environment: - POSTGRES_PASSWORD=...",
-                desc: "Đặt cấu hình mật khẩu bí mật khởi tạo cho hệ quản trị cơ sở dữ liệu PostgreSQL."
-            },
-            "top-volumes": {
-                title: "volumes:",
-                desc: "Nơi khai báo định danh tất cả các ổ đĩa dùng chung (Named Volumes) cấp độ toàn hệ thống ở cuối file cấu hình."
-            },
-            "top-networks": {
-                title: "networks:",
-                desc: "Khai báo định danh tất cả các mạng nội bộ (Networks) dùng chung toàn cục để các container giao tiếp độc lập bảo mật."
-            }
-        };
+            useEffect(() => {
+                try {
+                    const savedAi = localStorage.getItem("ai_copilot_roadmap_progress");
+                    if (savedAi) {
+                        const parsed = JSON.parse(savedAi);
+                        const completedCount = Object.values(parsed).filter(status => status === "Completed").length;
+                        setAiProgress(Math.min(100, Math.round((completedCount / 8) * 100))); // 8 stages
+                    }
 
-        // Data for Commands Cheat Sheet
-        const commandsData = [
-            // Image category
-            { cmd: "docker build -t [image-name]:[tag] .", desc: "Xây dựng một Image tĩnh từ tệp Dockerfile nằm trong thư mục hiện tại.", cat: "image" },
-            { cmd: "docker images", desc: "Hiển thị danh sách tất cả các Docker Images hiện đang được lưu trên máy của bạn.", cat: "image" },
-            { cmd: "docker rmi [image-id]", desc: "Xóa bỏ một Image tĩnh khỏi máy chủ để tiết kiệm bộ nhớ lưu trữ.", cat: "image" },
-            { cmd: "docker pull [image-name]", desc: "Tải một Docker Image từ kho lưu trữ trực tuyến Docker Hub về máy tính cá nhân.", cat: "image" },
-            { cmd: "docker tag [old-name] [new-name]", desc: "Đổi tên hoặc gắn tag phân loại phiên bản mới cho một Image có sẵn.", cat: "image" },
-            
-            // Container category
-            { cmd: "docker run -d -p 8080:80 --name [container-name] [image]", desc: "Khởi tạo và chạy một Container mới từ Image ở chế độ chạy ngầm (detached mode).", cat: "container" },
-            { cmd: "docker ps", desc: "Hiển thị danh sách các Container hiện đang ở trạng thái HOẠT ĐỘNG.", cat: "container" },
-            { cmd: "docker ps -a", desc: "Hiển thị toàn bộ Container (kể cả những container đã dừng, bị lỗi...).", cat: "container" },
-            { cmd: "docker stop [container-id]", desc: "Dừng tiến trình hoạt động của một Container đang chạy một cách an toàn.", cat: "container" },
-            { cmd: "docker start [container-id]", desc: "Khởi động lại một Container đã bị dừng từ trước đó.", cat: "container" },
-            { cmd: "docker rm [container-id]", desc: "Xóa bỏ vĩnh viễn một Container khỏi danh sách quản lý.", cat: "container" },
-            { cmd: "docker logs -f [container-id]", desc: "Theo dõi trực tiếp tệp nhật ký (logs) ghi lại hoạt động thời gian thực bên trong container.", cat: "container" },
-            { cmd: "docker exec -it [container-id] sh", desc: "Đi xuyên qua hệ thống bảo mật để truy cập trực tiếp vào giao diện dòng lệnh (CLI/Terminal) của container.", cat: "container" },
-            
-            // Compose category
-            { cmd: "docker compose up -d", desc: "Đọc file docker-compose.yml để tự động xây dựng, cấu hình và khởi chạy toàn bộ cụm dịch vụ chạy ngầm.", cat: "compose" },
-            { cmd: "docker compose down", desc: "Dừng, dọn dẹp và xóa sạch các container, mạng nội bộ được tạo ra bởi lệnh 'up'.", cat: "compose" },
-            { cmd: "docker compose ps", desc: "Liệt kê chi tiết danh sách và trạng thái hoạt động của các dịch vụ định nghĩa bởi file Compose hiện tại.", cat: "compose" },
-            { cmd: "docker compose logs -f [service-name]", desc: "Theo dõi tập trung nhật ký ghi lại của một dịch vụ cụ thể trong Compose.", cat: "compose" },
-            { cmd: "docker compose restart", desc: "Khởi động lại nhanh toàn bộ cụm dịch vụ mà không cần làm gián đoạn cấu hình.", cat: "compose" },
-            
-            // Cleanup category
-            { cmd: "docker system prune -a", desc: "Dọn dẹp siêu sạch: Quét và xóa bỏ toàn bộ container đã dừng, image rác không sử dụng và mạng ảo thừa.", cat: "cleanup" },
-            { cmd: "docker volume prune", desc: "Quét sạch và xóa bỏ các ổ đĩa ảo (Volumes) không còn liên kết với bất cứ Container nào.", cat: "cleanup" },
-            
-            // System category
-            { cmd: "docker info", desc: "Hiển thị toàn bộ thông tin phần cứng cấu hình hệ thống của Docker Engine đang hoạt động.", cat: "system" },
-            { cmd: "docker network ls", desc: "Hiển thị danh sách các mạng nội bộ ảo đang hoạt động trên hệ thống Docker của bạn.", cat: "system" },
-            { cmd: "docker inspect [container-id]", desc: "Lấy thông tin siêu dữ liệu (JSON) chi tiết và sâu nhất về một đối tượng container.", cat: "system" }
-        ];
+                    const savedDevops = localStorage.getItem("devops_roadmap_progress");
+                    if (savedDevops) {
+                        const parsed = JSON.parse(savedDevops);
+                        const completedCount = Object.values(parsed).filter(status => status === "Completed").length;
+                        setDevopsProgress(Math.min(100, Math.round((completedCount / 8) * 100))); // 8 stages
+                    }
 
-        // Theme Toggle Logic
-        function toggleTheme() {
-            const html = document.documentElement;
-            const themeIcon = document.getElementById('theme-icon');
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                themeIcon.className = 'fa-solid fa-moon';
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.classList.add('dark');
-                themeIcon.className = 'fa-solid fa-sun';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        // Tab Switching Logic
-        function switchTab(tabId) {
-            // Hide all tab content
-            document.querySelectorAll('.tab-content').forEach(section => {
-                section.classList.add('hidden');
-                section.classList.remove('block');
-            });
-
-            // Show target section
-            const targetSection = document.getElementById(`section-${tabId}`);
-            if (targetSection) {
-                targetSection.classList.remove('hidden');
-                targetSection.classList.add('block');
-            }
-
-            // Update Desktop Tab Button styling
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white';
-            });
-            const activeBtn = document.getElementById(`tab-${tabId}`);
-            if (activeBtn) {
-                activeBtn.className = 'tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-docker bg-slate-800/80 border border-slate-700/50';
-            }
-
-            // Update Mobile Tab Button styling
-            document.querySelectorAll('.tab-btn-mobile').forEach(btn => {
-                btn.className = 'tab-btn-mobile flex flex-col items-center text-xs text-slate-400';
-            });
-            const activeMobileBtn = document.getElementById(`m-tab-${tabId}`);
-            if (activeMobileBtn) {
-                activeMobileBtn.className = 'tab-btn-mobile flex flex-col items-center text-xs text-docker';
-            }
-        }
-
-        // Interactive Objects Click Handler
-        function selectObject(objKey) {
-            const data = architectureData[objKey];
-            if (!data) return;
-
-            // Highlight chosen node
-            const nodes = ['node-image', 'node-container', 'node-volume', 'node-network'];
-            nodes.forEach(nodeId => {
-                const node = document.getElementById(nodeId);
-                if (nodeId === `node-${objKey}`) {
-                    node.classList.add('border-docker', 'scale-105', 'bg-sky-950/20');
-                    node.classList.remove('border-slate-700');
-                } else {
-                    node.classList.remove('border-docker', 'scale-105', 'bg-sky-950/20');
-                    node.classList.add('border-slate-700');
+                    const savedNotes = localStorage.getItem("dev_central_notes");
+                    if (savedNotes) {
+                        setQuickNotes(savedNotes);
+                    }
+                } catch (e) {
+                    // Ignore parsing errors
                 }
-            });
+            }, []);
 
-            // Update Detail Content Panel
-            let bulletsHtml = data.bullets.map(b => `<li class="flex items-start gap-2"><i class="fa-solid fa-circle-chevron-right text-docker-light mt-1 text-[10px]"></i> <span>${b}</span></li>`).join('');
-            
-            const detailHtml = `
-                <div class="space-y-4 animate-fadeIn">
-                    <div class="flex items-center space-x-3">
-                        <span class="p-3 bg-slate-900 rounded-xl"><i class="${data.icon} text-3xl"></i></span>
-                        <h3 class="text-2xl font-extrabold text-slate-200">${data.title}</h3>
-                    </div>
-                    <p class="text-slate-300 text-sm leading-relaxed">${data.desc}</p>
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Các điểm đặc trưng cốt lõi:</h4>
-                        <ul class="text-xs text-slate-300 space-y-2">
-                            ${bulletsHtml}
-                        </ul>
-                    </div>
-                    <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg text-xs font-mono text-slate-300 flex justify-between items-center">
-                        <div>
-                            <span class="text-docker-light block text-[10px] uppercase font-bold tracking-widest mb-1">Ví dụ lệnh thao tác:</span>
-                            <span>${data.cmd}</span>
-                        </div>
-                        <button onclick="copyToClipboardRaw('${data.cmd}')" class="text-slate-500 hover:text-white transition-colors p-2"><i class="fa-solid fa-copy"></i></button>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('object-details-content').innerHTML = detailHtml;
-        }
+            const handleSaveNotes = (val) => {
+                setQuickNotes(val);
+                localStorage.setItem("dev_central_notes", val);
+            };
 
-        // Custom Toast Notification trigger
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-message');
-            toastMsg.innerText = message;
-            toast.className = toast.className.replace('translate-y-20 opacity-0 pointer-events-none', 'translate-y-0 opacity-100');
-            setTimeout(() => {
-                toast.className = toast.className.replace('translate-y-0 opacity-100', 'translate-y-20 opacity-0 pointer-events-none');
-            }, 3000);
-        }
-
-        // Copy Code Block function
-        function copyToClipboard(elementId) {
-            const codeEl = document.getElementById(elementId);
-            // Stripping HTML tags for pure code extraction
-            const cleanCode = codeEl.innerText || codeEl.textContent;
-            
-            const dummy = document.createElement("textarea");
-            document.body.appendChild(dummy);
-            dummy.value = cleanCode;
-            dummy.select();
-            document.execCommand("copy");
-            document.body.removeChild(dummy);
-            
-            showToast("Đã sao chép cấu hình vào bộ nhớ tạm!");
-        }
-
-        function copyToClipboardRaw(text) {
-            const dummy = document.createElement("textarea");
-            document.body.appendChild(dummy);
-            dummy.value = text;
-            dummy.select();
-            document.execCommand("copy");
-            document.body.removeChild(dummy);
-            showToast("Đã sao chép lệnh thao tác thành công!");
-        }
-
-        // Generate Commands Sheet UI Cards
-        function generateCommandsList() {
-            const container = document.getElementById('commands-container');
-            container.innerHTML = ''; // reset
-
-            commandsData.forEach((cmdObj, index) => {
-                const card = document.createElement('div');
-                card.className = 'command-card bg-slate-900/60 hover:bg-slate-800/40 p-4 rounded-xl border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-3';
-                card.setAttribute('data-cat', cmdObj.cat);
-                card.setAttribute('data-raw', cmdObj.cmd + ' ' + cmdObj.desc);
-
-                card.innerHTML = `
-                    <div class="space-y-1">
-                        <span class="text-[10px] uppercase font-mono px-2 py-0.5 bg-slate-800 text-slate-400 rounded border border-slate-700/60 inline-block">${cmdObj.cat}</span>
-                        <p class="text-xs text-slate-300 leading-relaxed pt-1">${cmdObj.desc}</p>
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-850 flex items-center justify-between font-mono text-xs text-docker-light overflow-x-auto">
-                        <code class="whitespace-nowrap">${cmdObj.cmd}</code>
-                        <button onclick="copyToClipboardRaw('${cmdObj.cmd}')" class="p-1 hover:text-white text-slate-500 transition-colors ml-2 flex-shrink-0" title="Sao chép lệnh">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // Filters implementation
-        function filterCategory(cat) {
-            // Update active state of filter buttons
-            document.querySelectorAll('.cmd-cat-btn').forEach(btn => {
-                btn.className = 'cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all';
-            });
-            event.target.className = 'cmd-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-docker text-white transition-all';
-
-            // Filter cards
-            document.querySelectorAll('.command-card').forEach(card => {
-                if (cat === 'all' || card.getAttribute('data-cat') === cat) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
+            // Programmatic search filter logic for index search
+            const portals = [
+                {
+                    id: "ai-copilot",
+                    title: "Lộ Trình Làm Chủ AI & GitHub Copilot",
+                    path: "ai_copilot_roadmap.html",
+                    badge: "AI & Prompt Engineering",
+                    icon: <Icons.AI />,
+                    colorTheme: "from-cyan-500/20 via-brand-600/10 to-transparent hover:border-brand-cyan/40",
+                    progress: aiProgress,
+                    desc: "Lập trình hiệu suất cực cao cùng trí tuệ nhân tạo. Làm chủ Prompt Engineering chuyên sâu (Zero/Few-Shot, XML formats), cấu hình .github/copilot-instructions, vẽ sơ đồ Mermaid.js và phòng thí nghiệm tương tác (Sandbox Lab) tích hợp Gemini API trực tiếp.",
+                    keywords: ["ai", "copilot", "prompt", "gemini", "xml", "instructions", "sandbox", "lab"]
+                },
+                {
+                    id: "devops-docker",
+                    title: "Lộ Trình Học DevOps & Docker Thực Tiễn",
+                    path: "devops_roadmap.html",
+                    badge: "Infrastructure & Automation",
+                    icon: <Icons.DevOps />,
+                    colorTheme: "from-brand-600/20 via-purple-600/10 to-transparent hover:border-brand-500/40",
+                    progress: devopsProgress,
+                    desc: "Học tập và vận hành các hệ thống microservices hiện đại. Đi từ nền tảng Linux, Network cơ bản đến làm chủ đóng gói Container (Docker), xây dựng quy trình CI/CD tích hợp, tự động hóa hạ tầng (Terraform), điều phối Kubernetes (K8s) và giám sát tập trung (Prometheus, Grafana).",
+                    keywords: ["devops", "docker", "ci/cd", "kubernetes", "k8s", "terraform", "monitoring", "linux", "network"]
                 }
-            });
-        }
+            ];
 
-        function filterCommands() {
-            const query = document.getElementById('command-search').value.toLowerCase().trim();
-            document.querySelectorAll('.command-card').forEach(card => {
-                const searchString = card.getAttribute('data-raw').toLowerCase();
-                if (searchString.includes(query)) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        }
+            const filteredPortals = useMemo(() => {
+                if (!searchQuery.trim()) return portals;
+                const query = searchQuery.toLowerCase();
+                return portals.filter(p => 
+                    p.title.toLowerCase().includes(query) || 
+                    p.desc.toLowerCase().includes(query) || 
+                    p.keywords.some(k => k.includes(query))
+                );
+            }, [searchQuery, aiProgress, devopsProgress]);
 
-        // Initialize interaction listeners on dockerfile & docker compose lines
-        function setupInteractiveLines() {
-            // Dockerfile logic
-            document.querySelectorAll('.df-line').forEach(line => {
-                const cmd = line.getAttribute('data-cmd');
-                const explainer = dockerfileExplanations[cmd];
-
-                const showFn = () => {
-                    // highlight item
-                    document.querySelectorAll('.df-line').forEach(l => l.classList.remove('bg-sky-950/40', 'border-l-4', 'border-docker'));
-                    line.classList.add('bg-sky-950/40', 'border-l-4', 'border-docker');
+            return (
+                <div className="min-h-screen pb-16 relative overflow-hidden bg-slate-950">
                     
-                    document.getElementById('df-explain-text').innerHTML = `
-                        <div class="space-y-2 animate-fadeIn">
-                            <h4 class="text-sm font-extrabold text-white bg-slate-900/60 p-2 rounded border border-slate-700/60 font-mono">${explainer.title}</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">${explainer.desc}</p>
+                    {/* Background decorations - Tech Ambient Lights */}
+                    <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-brand-500/10 rounded-full filter blur-[120px] pointer-events-none"></div>
+                    <div className="absolute bottom-10 right-1/4 w-[400px] h-[400px] bg-brand-cyan/10 rounded-full filter blur-[100px] pointer-events-none"></div>
+
+                    {}
+                    <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-gradient-to-tr from-brand-600 to-brand-cyan rounded-xl text-white shadow-lg shadow-brand-500/20">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 className="font-extrabold text-xl bg-gradient-to-r from-slate-100 via-brand-100 to-brand-cyan bg-clip-text text-transparent">
+                                        DevMastery Central Hub
+                                    </h1>
+                                    <p className="text-[10px] text-slate-400 font-bold tracking-wider uppercase">Cổng học tập & Thực hành cho lập trình viên 2026</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <span className="flex h-2.5 w-2.5 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-cyan"></span>
+                                </span>
+                                <span className="text-xs font-bold text-slate-300 hidden sm:inline">Hệ thống đang hoạt động</span>
+                            </div>
                         </div>
-                    `;
-                };
+                    </header>
 
-                line.addEventListener('mouseenter', showFn);
-                line.addEventListener('click', showFn);
-            });
+                    {/* MAIN CONTAINER */}
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 space-y-10 relative z-10">
+                        
+                        {}
+                        {/* HERO PROMPT SECTION */}
+                        <div className="glass-panel border border-slate-900 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-80 h-80 bg-brand-600/10 rounded-full filter blur-[80px] -translate-y-1/3 translate-x-1/3"></div>
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                <div className="lg:col-span-8 space-y-4">
+                                    <span className="bg-brand-600/20 text-brand-cyan border border-brand-cyan/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                                        Hạ tầng hiện đại & Trí tuệ nhân tạo
+                                    </span>
+                                    <h2 className="text-3xl sm:text-5xl font-extrabold leading-tight tracking-tight text-white">
+                                        Học Tập Tích Hợp <br />
+                                        <span className="bg-gradient-to-r from-brand-cyan via-brand-500 to-indigo-400 bg-clip-text text-transparent">Nâng Tầm Trình Độ Lập Trình</span>
+                                    </h2>
+                                    <p className="text-slate-400 max-w-xl text-sm sm:text-base leading-relaxed">
+                                        Chào mừng bạn đến với Cổng học tập trung tâm. Tại đây, chúng tôi đã đóng gói các hướng dẫn chuẩn chỉ nhất giúp bạn bứt phá năng suất lập trình nhờ AI và nắm vững quy trình vận hành DevOps đẳng cấp quốc tế.
+                                    </p>
+                                    
+                                    {/* SEARCH PORTAL BAR */}
+                                    <div className="relative max-w-md pt-2">
+                                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                            <Icons.Search />
+                                        </span>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Tìm nhanh kỹ năng (docker, prompt, k8s, git, etc)..." 
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition-all text-slate-200"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                        {searchQuery && (
+                                            <button 
+                                                onClick={() => setSearchQuery("")}
+                                                className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-white text-xs font-bold"
+                                            >
+                                                Xóa
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
 
-            // Docker Compose logic
-            document.querySelectorAll('.cmp-line').forEach(line => {
-                const cmd = line.getAttribute('data-cmd');
-                const explainer = composeExplanations[cmd];
-                if (!explainer) return;
+                                {/* SYSTEM PROGRESS BLOCK */}
+                                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4">
+                                    <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                        <Icons.Terminal /> Tiến độ học tập chung
+                                    </h3>
+                                    
+                                    <div className="space-y-3.5">
+                                        {/* AI Card Progress Indicator */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-xs font-bold">
+                                                <span className="text-brand-cyan">AI & Copilot Mastery</span>
+                                                <span className="text-slate-300">{aiProgress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden">
+                                                <div 
+                                                    className="bg-gradient-to-r from-brand-cyan to-brand-500 h-2 rounded-full transition-all duration-500" 
+                                                    style={{ width: `${aiProgress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
 
-                const showFn = () => {
-                    document.querySelectorAll('.cmp-line').forEach(l => l.classList.remove('bg-sky-950/40', 'border-l-4', 'border-docker'));
-                    line.classList.add('bg-sky-950/40', 'border-l-4', 'border-docker');
+                                        {/* DevOps Card Progress Indicator */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-xs font-bold">
+                                                <span className="text-brand-500">DevOps & Containerization</span>
+                                                <span className="text-slate-300">{devopsProgress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden">
+                                                <div 
+                                                    className="bg-gradient-to-r from-brand-500 to-indigo-500 h-2 rounded-full transition-all duration-500" 
+                                                    style={{ width: `${devopsProgress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    document.getElementById('compose-explain-text').innerHTML = `
-                        <div class="space-y-2 animate-fadeIn">
-                            <h4 class="text-sm font-extrabold text-white bg-slate-900/60 p-2 rounded border border-slate-700/60 font-mono">${explainer.title}</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">${explainer.desc}</p>
+                                    <div className="pt-3 border-t border-slate-800/50 text-[11px] text-slate-500 flex justify-between items-center">
+                                        <span>Cập nhật mới nhất: 2026</span>
+                                        <span className="text-brand-cyan font-semibold">Tự động sao lưu</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    `;
-                };
 
-                line.addEventListener('mouseenter', showFn);
-                line.addEventListener('click', showFn);
-            });
+                        {}
+                        {/* PORTAL NAVIGATION CARDS */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-extrabold text-lg text-slate-200 tracking-tight flex items-center gap-2">
+                                    <span className="w-1.5 h-6 bg-brand-600 rounded"></span>
+                                    <span>Danh mục Lộ trình huấn luyện</span>
+                                </h3>
+                                <span className="text-xs text-slate-500">{filteredPortals.length} Cổng kết nối khả dụng</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {filteredPortals.length === 0 ? (
+                                    <div className="col-span-2 text-center py-16 bg-slate-900/20 rounded-2xl border border-dashed border-slate-800">
+                                        <p className="text-slate-400">Không tìm thấy lộ trình nào phù hợp với từ khóa.</p>
+                                    </div>
+                                ) : (
+                                    filteredPortals.map((portal) => (
+                                        <div 
+                                            key={portal.id}
+                                            className={`glass-panel border border-slate-900 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1 flex flex-col h-full group bg-gradient-to-br ${portal.colorTheme}`}
+                                        >
+                                            <div className="p-6 sm:p-8 flex-grow space-y-4">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 group-hover:border-slate-700 transition">
+                                                        {portal.icon}
+                                                    </div>
+                                                    <div className="flex flex-col items-end space-y-1.5">
+                                                        <span className="text-[10px] font-bold text-slate-300 bg-slate-950/60 border border-slate-800/80 px-2.5 py-1 rounded-full">
+                                                            {portal.badge}
+                                                        </span>
+                                                        <span className="text-[11px] font-bold text-brand-emerald bg-brand-emerald/10 border border-brand-emerald/20 px-2.5 py-0.5 rounded-full">
+                                                            Đã hoàn thành {portal.progress}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <h4 className="text-xl font-bold text-white group-hover:text-brand-cyan transition-colors">
+                                                        {portal.title}
+                                                    </h4>
+                                                    <p className="text-sm text-slate-400 leading-relaxed">
+                                                        {portal.desc}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Action redirection bar */}
+                                            <div className="px-6 py-4 bg-slate-950/40 border-t border-slate-900/60 flex items-center justify-between group-hover:bg-slate-950/80 transition">
+                                                <span className="text-xs text-slate-500 font-semibold group-hover:text-slate-300 transition-colors">
+                                                    Khởi chạy môi trường tương tác
+                                                </span>
+                                                <a 
+                                                    href={portal.path}
+                                                    className="flex items-center space-x-1.5 text-xs font-bold text-brand-cyan bg-brand-cyan/10 hover:bg-brand-cyan/20 border border-brand-cyan/30 px-4 py-2 rounded-xl transition"
+                                                >
+                                                    <span>Bắt đầu học</span>
+                                                    <Icons.ArrowRight />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {}
+                        {/* PORTAL UTILITY WIDGETS */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                            
+                            {/* Interactive Sticky notes and fast checklist */}
+                            <div className="lg:col-span-8 bg-slate-900/30 border border-slate-900 rounded-2xl p-6 space-y-4 shadow-xl">
+                                <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
+                                    <h3 className="font-extrabold text-base text-slate-200 flex items-center gap-2">
+                                        <Icons.Bookmark /> Sổ tay Ghi chú Lập trình viên
+                                    </h3>
+                                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase font-bold">Auto-save</span>
+                                </div>
+                                <textarea 
+                                    rows={5}
+                                    className="w-full p-4 bg-slate-950/80 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-sans text-slate-200 placeholder-slate-600 leading-relaxed"
+                                    placeholder="Viết các ghi chú kỹ thuật, lệnh CLI quan trọng, hay cấu hình prompt nháp của bạn vào đây..."
+                                    value={quickNotes}
+                                    onChange={(e) => handleSaveNotes(e.target.value)}
+                                />
+                                <div className="text-[11px] text-slate-500 flex justify-between items-center">
+                                    <span>Ghi chú này sẽ được lưu giữ tự động trong trình duyệt của bạn.</span>
+                                    <button 
+                                        onClick={() => handleSaveNotes("")}
+                                        className="text-red-400 hover:underline hover:text-red-300 font-semibold"
+                                    >
+                                        Xóa ghi chú
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Dev Checklist */}
+                            <div className="lg:col-span-4 bg-slate-900/30 border border-slate-900 rounded-2xl p-6 space-y-4 shadow-xl">
+                                <h3 className="font-extrabold text-base text-slate-200 flex items-center gap-2 pb-3 border-b border-slate-800">
+                                    <Icons.Check /> Checklist Tiêu chuẩn Lập trình 
+                                </h3>
+                                
+                                <ul className="space-y-3">
+                                    {[
+                                        "Hiểu cơ chế hoạt động của Context Window",
+                                        "Đóng gói thành thạo Container Docker",
+                                        "Viết tệp tin .github/copilot-instructions",
+                                        "Kiểm thử đầy đủ các nhánh lỗi (Edge Cases)",
+                                        "Thiết lập Alerting Rules với Grafana"
+                                    ].map((item, idx) => (
+                                        <li key={idx} className="flex items-start space-x-2 text-xs text-slate-400">
+                                            <span className="mt-0.5"><Icons.Check /></span>
+                                            <span>{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                        </div>
+
+                    </main>
+
+                    {/* FOOTER */}
+                    <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-slate-500 space-y-2">
+                        <p>© 2026 DevMastery Central Hub. Tất cả các quyền được bảo lưu.</p>
+                        <p>Học tập chuyên nghiệp, nhanh gọn và tối ưu hóa năng suất lập trình hàng ngày.</p>
+                    </footer>
+                </div>
+            );
         }
 
-        // On Load initialization
-        window.onload = function() {
-            generateCommandsList();
-            setupInteractiveLines();
-            // Default node selection
-            selectObject('container');
-            
-            // localstorage dark/light theme load
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                toggleTheme();
-            }
-        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
