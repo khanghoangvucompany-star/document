@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lộ Trình Học DevOps Thực Tiễn 2026</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS Config for Custom Colors -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            200: '#bae0fd',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- React and ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Custom SVGs representing Icons for visual neatness and reliability
+        const Icons = {
+            Book: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+            CheckCircle: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Play: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Lock: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
+            ExternalLink: () => <svg className="w-4 h-4 inline ml-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>,
+            Search: () => <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
+            Code: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>,
+            Layers: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>,
+            Terminal: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+            Trophy: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" /></svg>,
+            
+            // New Video/Lecture Icons for improved UI clarity
+            YoutubeIcon: () => (
+                <svg className="w-3.5 h-3.5 text-red-500 fill-current" viewBox="0 0 24 24">
+                    <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.508 9.388.508 9.388.508s7.517 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+            ),
+            UdemyIcon: () => (
+                <svg className="w-3.5 h-3.5 text-purple-600 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.186 14.154c-.663.663-1.636 1.054-2.731 1.054-1.096 0-2.068-.391-2.731-1.054l-3.324-3.323c-.313-.314-.313-.824 0-1.138.314-.314.824-.314 1.138 0l3.324 3.323c.313.313.824.313 1.138 0l3.324-3.323c.314-.314.824-.314 1.138 0 .313.314.313.824 0 1.138l-3.324 3.323z"/>
+                </svg>
+            )
+        };
+
+        // Complete DevOps Roadmap Data based on roadmap.sh and KodeKloud
+        const roadmapData = [
+            {
+                id: "stage-1",
+                title: "Nền tảng & Hệ điều hành (OS)",
+                level: "Cơ bản",
+                badgeColor: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+                icon: "Terminal",
+                duration: "2-3 tuần",
+                description: "Hiểu cách hệ điều hành hoạt động, đặc biệt là Linux, và cách tương tác với hệ thống thông qua CLI.",
+                concepts: [
+                    "Sử dụng Linux Command Line (Bash, commands cơ bản như ls, cd, grep, awk, sed, curl)",
+                    "Quản lý Users, Quyền hạn truy cập file (Permissions - chmod, chown)",
+                    "Quản lý tiến trình (Process Management - ps, top, htop, kill)",
+                    "Viết Bash Script tự động hóa các tác vụ lặp đi lặp lại",
+                    "Cơ chế SSH Key & Quản lý bảo mật server cơ bản"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Bash Automation Script",
+                    desc: "Tạo một Bash script chạy định kỳ (Cronjob) để tự động kiểm tra dung lượng ổ đĩa, RAM. Nếu vượt quá 85%, nén thư mục log (/var/log), tải lên lưu trữ hoặc gửi thông báo cảnh báo qua Telegram API.",
+                    steps: [
+                        "Cài đặt một máy ảo Ubuntu (hoặc dùng WSL trên Windows).",
+                        "Sử dụng các lệnh df, free để lấy thông số tài nguyên.",
+                        "Viết logic kiểm tra điều kiện bằng Bash script.",
+                        "Tạo Telegram Bot, lấy Token và gửi HTTP POST request bằng curl trong script.",
+                        "Thiết lập Crontab để script tự chạy mỗi giờ một lần."
+                    ]
+                },
+                resources: [
+                    { name: "Linux Roadmap - roadmap.sh", url: "https://roadmap.sh/linux", type: "docs" },
+                    { name: "YT: Linux for Hackers (NetworkChuck)", url: "https://www.youtube.com/watch?v=VbEx7B_PTOE", type: "youtube" },
+                    { name: "YT: Linux Operating System Course - freeCodeCamp", url: "https://www.youtube.com/watch?v=sWbUDq4S6Y8", type: "youtube" },
+                    { name: "Udemy: Linux Administration Bootcamp - Jason Cannon", url: "https://www.udemy.com/course/linux-administration-bootcamp/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-2",
+                title: "Hạ tầng mạng & Giao thức",
+                level: "Cơ bản",
+                badgeColor: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+                icon: "Layers",
+                duration: "1-2 tuần",
+                description: "DevOps Engineer cần hiểu cách các máy tính nói chuyện với nhau. Đây là nền tảng cốt lõi để debug lỗi hệ thống.",
+                concepts: [
+                    "Mô hình TCP/IP & OSI (Các tầng hoạt động)",
+                    "Hiểu DNS hoạt động thế nào (A record, CNAME, MX, TXT, NS)",
+                    "HTTP/HTTPS: Request/Response, Headers, Status Codes",
+                    "Mạng máy tính: IP Addressing, CIDR Blocks, Subnetting, Gateway, NAT",
+                    "Firewall & Ports (Thiết lập quy tắc bảo mật inbound/outbound)"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Cấu hình Local DNS & Web Server",
+                    desc: "Cấu hình một Web server cục bộ (như Nginx) lắng nghe trên cổng 80 và 443, sau đó tùy chỉnh file hosts để ánh xạ một tên miền ảo (ví dụ: mydevops.local) trỏ thẳng về server này.",
+                    steps: [
+                        "Cài đặt Nginx Web Server trên Linux.",
+                        "Cấu hình file Nginx Server Block (Virtual Host) nhận diện domain ảo.",
+                        "Chỉnh sửa cấu hình file /etc/hosts trên máy cá nhân.",
+                        "Tạo chứng chỉ SSL tự ký (Self-signed Certificate) bằng OpenSSL.",
+                        "Cấu hình Nginx chạy HTTPS ổn định với SSL certificate vừa tạo."
+                    ]
+                },
+                resources: [
+                    { name: "Computer Networking - roadmap.sh", url: "https://roadmap.sh/computer-networking", type: "docs" },
+                    { name: "YT: Computer Networking Course - freeCodeCamp", url: "https://www.youtube.com/watch?v=IPvYjXofLQY", type: "youtube" },
+                    { name: "YT: FREE CCNA (Networking Basics) - NetworkChuck", url: "https://www.youtube.com/watch?v=QIJVg_RIctc", type: "youtube" },
+                    { name: "Udemy: Computer Networks for Non-Techies - Alton Hardin", url: "https://www.udemy.com/course/introduction-to-computer-networks-in-plain-english/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-3",
+                title: "Ngôn ngữ lập trình (Python/Go)",
+                level: "Cơ bản",
+                badgeColor: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+                icon: "Code",
+                duration: "2-3 tuần",
+                description: "DevOps không cần code thuật toán siêu đẳng, nhưng phải thành thạo việc viết code tự động hóa và gọi API.",
+                concepts: [
+                    "Cơ bản về Python (Biến, Kiểu dữ liệu, Vòng lặp, Hàm)",
+                    "Làm việc với File hệ thống & JSON parsing trong Python",
+                    "Sử dụng thư viện requests để giao tiếp với các REST API bên ngoài",
+                    "Xử lý lỗi (Exception Handling) và Logging",
+                    "Làm quen với thư viện tương tác Cloud (ví dụ: boto3 cho AWS)"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: API Integrator & Backup Automation",
+                    desc: "Viết một script Python để tự động gọi API của Github lấy danh sách các repository của bạn, nén code thành file zip, sau đó tự động tải file zip này lưu trữ lên một dịch vụ Cloud Storage (như AWS S3 hoặc Google Drive API).",
+                    steps: [
+                        "Đăng ký Github Developer token để gọi API.",
+                        "Dùng thư viện requests lấy thông tin repos.",
+                        "Dùng thư viện shutil và zipfile để nén dữ liệu.",
+                        "Sử dụng SDK (boto3) để đẩy file lên Amazon S3 hoặc Mock S3 cục bộ."
+                    ]
+                },
+                resources: [
+                    { name: "Python Roadmap - roadmap.sh", url: "https://roadmap.sh/python", type: "docs" },
+                    { name: "YT: Python for DevOps (Abhishek Veeramalla)", url: "https://www.youtube.com/watch?v=HvNU4dupQkg", type: "youtube" },
+                    { name: "YT: Learn Go Programming - freeCodeCamp", url: "https://www.youtube.com/watch?v=YS4e4q9oBaU", type: "youtube" },
+                    { name: "Udemy: Go: The Complete Developer's Guide - Stephen Grider", url: "https://www.udemy.com/course/go-the-complete-developers-guide/", type: "udemy" },
+                    { name: "Udemy: 100 Days of Code (Python Bootcamp) - Angela Yu", url: "https://www.udemy.com/course/100-days-of-code/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-4",
+                title: "Containerization (Docker)",
+                level: "Trung bình",
+                badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                icon: "Layers",
+                duration: "2 tuần",
+                description: "Container là chuẩn mực triển khai phần mềm hiện đại. Docker là công cụ buộc phải biết của mọi kỹ sư DevOps.",
+                concepts: [
+                    "Sự khác biệt giữa Virtual Machines (VMs) và Containers",
+                    "Cấu trúc Dockerfile (FROM, RUN, CMD, COPY, EXPOSE, ENV, VOLUME)",
+                    "Tối ưu hóa Docker Image (Multi-stage builds, Alpine Base Images)",
+                    "Quản lý dữ liệu (Docker Volumes) và mạng (Docker Networks)",
+                    "Docker Compose để quản lý các ứng dụng đa container (Multi-container apps)"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Dockerize Ứng Dụng Multi-tier",
+                    desc: "Tạo cấu hình Docker Compose cho một ứng dụng hoàn chỉnh: Frontend (React), Backend (NodeJS/Python) và Cơ sở dữ liệu (PostgreSQL/MongoDB). Đảm bảo database lưu trữ dữ liệu an toàn trên ổ đĩa máy host.",
+                    steps: [
+                        "Viết Dockerfile tối ưu (áp dụng multi-stage build để giảm dung lượng image) cho Frontend và Backend.",
+                        "Tạo file docker-compose.yml liên kết 3 dịch vụ.",
+                        "Sử dụng Environment Variables để cấu hình kết nối bảo mật giữa backend và DB.",
+                        "Thiết lập Volume để persist dữ liệu của Database."
+                    ]
+                },
+                resources: [
+                    { name: "Docker Roadmap - roadmap.sh", url: "https://roadmap.sh/docker", type: "docs" },
+                    { name: "YT: Docker Tutorial for Beginners - TechWorld with Nana", url: "https://www.youtube.com/watch?v=3c-iLsGjeZI", type: "youtube" },
+                    { name: "YT: Complete Docker Course - Kunal Kushwaha", url: "https://www.youtube.com/watch?v=17mNFA95M08", type: "youtube" },
+                    { name: "Udemy: Docker for the Absolute Beginner - Mumshad Mannambeth", url: "https://www.udemy.com/course/learn-docker/", type: "udemy" },
+                    { name: "Udemy: Docker and Kubernetes Complete Guide - Stephen Grider", url: "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-5",
+                title: "CI/CD Pipelines (Github Actions / GitLab)",
+                level: "Trung bình",
+                badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                icon: "Book",
+                duration: "2-3 tuần",
+                description: "CI/CD là trái tim của DevOps. Nó tự động hóa hoàn toàn quá trình Kiểm thử, Build và Triển khai code lên Server.",
+                concepts: [
+                    "Lý thuyết CI (Continuous Integration) và CD (Continuous Delivery/Deployment)",
+                    "Cơ chế Trigger, Jobs, Steps, Runners trong GitHub Actions hoặc GitLab CI",
+                    "Xử lý bảo mật Secrets (API keys, SSH keys) trong Pipeline",
+                    "Cơ chế Cache trong pipeline để tăng tốc build ứng dụng",
+                    "Quy trình tự động hóa Semantic Versioning và push Docker Image lên Registry"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Tự Động Hóa Build & Deploy Lên Cloud",
+                    desc: "Viết workflow Github Actions tự khởi chạy mỗi khi bạn 'git push' code lên main branch. Workflow sẽ: Run Linter/Test -> Build Docker Image -> Push lên Docker Hub -> Tự động SSH vào máy ảo VPS để pull image mới về và restart container.",
+                    steps: [
+                        "Tạo repository trên Github chứa source code một app đơn giản.",
+                        "Viết file cấu hình .github/workflows/deploy.yml.",
+                        "Cài đặt Secret Variables trên Repo để chứa thông tin SSH của VPS và Docker Hub Token.",
+                        "Sử dụng SSH Action để thực thi lệnh restart app từ xa an toàn."
+                    ]
+                },
+                resources: [
+                    { name: "CI/CD Roadmap - roadmap.sh", url: "https://roadmap.sh/cicd", type: "docs" },
+                    { name: "YT: GitHub Actions Tutorial - TechWorld with Nana", url: "https://www.youtube.com/watch?v=R8_veQiYBhI", type: "youtube" },
+                    { name: "YT: GitLab CI/CD Tutorial for Beginners - freeCodeCamp", url: "https://www.youtube.com/watch?v=l5705_YeYb8", type: "youtube" },
+                    { name: "Udemy: GitHub Actions - The Complete Guide - M. Schwarzmüller", url: "https://www.udemy.com/course/github-actions-the-complete-guide/", type: "udemy" },
+                    { name: "Udemy: GitLab CI/CD for Beginners - Valentin Despa", url: "https://www.udemy.com/course/gitlab-ci-pipelines-ci-cd-and-devops-for-beginners/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-6",
+                title: "Infrastructure as Code (Terraform)",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+                icon: "Layers",
+                duration: "3 tuần",
+                description: "Định nghĩa và quản lý máy chủ, mạng, cơ sở dữ liệu hoàn toàn bằng Code. Không bao giờ thao tác click tay trên Web console nữa.",
+                concepts: [
+                    "Hiểu triết lý Infrastructure as Code (IaC) - Declarative vs Imperative",
+                    "Cú pháp ngôn ngữ HCL (HashiCorp Configuration Language)",
+                    "Providers, Resources, Variables, Output trong Terraform",
+                    "Quản lý Terraform State (Sự quan trọng của Remote State, State Locking)",
+                    "Sử dụng Terraform Modules để tái sử dụng hạ tầng hiệu quả"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Tạo Hạ Tầng Cloud Tự Động (AWS/GCP/Azure)",
+                    desc: "Sử dụng Terraform để khởi tạo một mạng VPC hoàn chỉnh bao gồm: 1 Public Subnet, 1 Security Group chỉ cho phép mở port 22 & 80, và tự động tạo 1 máy ảo EC2 đã cài sẵn Docker từ khi khởi chạy.",
+                    steps: [
+                        "Đăng ký tài khoản AWS Free Tier (hoặc LocalStack nếu muốn giả lập local).",
+                        "Viết mã Terraform định nghĩa VPC, Subnet, Route Tables và Security Group.",
+                        "Sử dụng 'user_data' trong Terraform để cài đặt tự động Docker trên EC2 khi máy chủ khởi động.",
+                        "Thực thi 'terraform apply' để xem tài nguyên được tạo ra, sau đó dọn dẹp bằng 'terraform destroy' để tránh mất phí."
+                    ]
+                },
+                resources: [
+                    { name: "Terraform Guide - roadmap.sh", url: "https://roadmap.sh/terraform", type: "docs" },
+                    { name: "YT: Terraform Course (Zero to Hero) - DevOps Directive", url: "https://www.youtube.com/watch?v=7xngnjfONK8", type: "youtube" },
+                    { name: "YT: Terraform Beginner Bootcamp - freeCodeCamp", url: "https://www.youtube.com/watch?v=V4waklkBC38", type: "youtube" },
+                    { name: "Udemy: HashiCorp Certified: Terraform Associate - Zeal Vora", url: "https://www.udemy.com/course/terraform-certified/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-7",
+                title: "Kubernetes (K8s) - Điều phối Container",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+                icon: "Trophy",
+                duration: "4 tuần",
+                description: "Nền tảng quản lý container ở quy mô cực lớn. Tiêu chuẩn vàng cho các hệ thống Microservices hiện nay.",
+                concepts: [
+                    "Kiến trúc K8s (Control Plane vs Worker Nodes)",
+                    "Các tài nguyên cơ bản: Pods, Deployments, ReplicaSets, Services (ClusterIP, NodePort, LoadBalancer)",
+                    "Cấu hình cấu trúc: ConfigMaps, Secrets",
+                    "Quản lý lưu trữ: Persistent Volumes (PV) & Persistent Volume Claims (PVC)",
+                    "Ingress Controllers để định tuyến traffic từ ngoài internet vào cụm K8s"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Triển Khai App Đa Tầng Lên K8s Cục Bộ",
+                    desc: "Cài đặt một cụm K8s nội bộ (sử dụng Minikube hoặc K3s). Triển khai một ứng dụng web, định nghĩa ConfigMap để nạp cấu hình, cấu hình Auto-scaling (HPA) để ứng dụng tự sinh thêm bản sao (Pods) khi tải cao.",
+                    steps: [
+                        "Cài đặt Minikube hoặc Kind trên máy tính cá nhân.",
+                        "Viết các file YAML định nghĩa: Deployment (chứa ứng dụng), Service (để định tuyến) và Ingress.",
+                        "Triển khai Metrics Server và thiết lập Horizontal Pod Autoscaler (HPA) dựa trên thông số CPU.",
+                        "Giả lập stress-test (tải nặng) để kiểm chứng hệ thống tự sinh thêm Pods mới và tự scale down khi hết tải."
+                    ]
+                },
+                resources: [
+                    { name: "Kubernetes Guide - roadmap.sh", url: "https://roadmap.sh/kubernetes", type: "docs" },
+                    { name: "YT: Kubernetes Course for Beginners - TechWorld with Nana", url: "https://www.youtube.com/watch?v=X48VuDVv0do", type: "youtube" },
+                    { name: "YT: Complete Kubernetes Course (CKA Prep) - freeCodeCamp", url: "https://www.youtube.com/watch?v=d6WC5n9G_sM", type: "youtube" },
+                    { name: "Udemy: Certified Kubernetes Administrator (CKA) - Mumshad Mannambeth", url: "https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/", type: "udemy" }
+                ]
+            },
+            {
+                id: "stage-8",
+                title: "Giám sát & Quản trị Log (Observability)",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+                icon: "Layers",
+                duration: "2 tuần",
+                description: "Hệ thống đang hoạt động ổn định hay lỗi? Làm sao để phát hiện sự cố trước khi khách hàng phàn nàn?",
+                concepts: [
+                    "Các khái niệm cốt lõi: Metrics, Logs, Traces (The 3 Pillars of Observability)",
+                    "Thu thập metrics bằng Prometheus & Thiết kế Dashboards trực quan bằng Grafana",
+                    "Tập trung hóa Log (Centralized Logging) bằng ELK Stack (Elasticsearch, Logstash, Kibana) hoặc Loki",
+                    "Thiết lập quy tắc cảnh báo (Alerting Rules) để chủ động ứng phó sự cố"
+                ],
+                practice: {
+                    title: "Dự án thực tiễn: Giám Sát Tài Nguyên & Cảnh Báo Chủ Động",
+                    desc: "Thiết lập Prometheus để thu thập các số liệu CPU, RAM, Network của server/containers. Hiển thị thông số trực tiếp lên một Dashboard Grafana chuyên nghiệp và cấu hình cảnh báo tự động gửi về Telegram/Slack nếu CPU vượt quá 90%.",
+                    steps: [
+                        "Deploy bộ Prometheus & Grafana bằng Docker Compose hoặc Helm chart trên K8s.",
+                        "Cài đặt Node Exporter trên server để expose các thông số phần cứng.",
+                        "Cấu hình Prometheus scrape metrics từ Node Exporter.",
+                        "Import Dashboard mẫu của Node Exporter trên Grafana.",
+                        "Thiết lập Grafana Alerting Rule kết nối với Webhook của Discord hoặc Telegram."
+                    ]
+                },
+                resources: [
+                    { name: "Observability Roadmap - roadmap.sh", url: "https://roadmap.sh/monitoring", type: "docs" },
+                    { name: "YT: Prometheus & Grafana Complete Tutorial - TechWorld with Nana", url: "https://www.youtube.com/watch?v=h4Sl2169dfU", type: "youtube" },
+                    { name: "YT: Observability in DevOps - DevOps Directive", url: "https://www.youtube.com/watch?v=680O4_C-2vQ", type: "youtube" },
+                    { name: "Udemy: Prometheus Certified Associate (PCA) Prep - Mumshad Mannambeth", url: "https://www.udemy.com/course/prometheus-certified-associate-pca/", type: "udemy" }
+                ]
+            }
+        ];
+
+        function App() {
+            const [selectedStage, setSelectedStage] = useState(roadmapData[0]);
+            const [searchQuery, setSearchQuery] = useState("");
+            const [filterLevel, setFilterLevel] = useState("All");
+            const [darkMode, setDarkMode] = useState(true);
+            const [progress, setProgress] = useState({});
+
+            // Load initial state & dark mode preference
+            useEffect(() => {
+                const savedProgress = localStorage.getItem("devops_roadmap_progress");
+                if (savedProgress) {
+                    setProgress(JSON.parse(savedProgress));
+                }
+
+                if (darkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, []);
+
+            // Handle dark mode toggle
+            const toggleDarkMode = () => {
+                setDarkMode(!darkMode);
+                document.documentElement.classList.toggle('dark');
+            };
+
+            // Handle status change of a stage
+            const handleStatusChange = (stageId, status) => {
+                const updatedProgress = { ...progress, [stageId]: status };
+                setProgress(updatedProgress);
+                localStorage.setItem("devops_roadmap_progress", JSON.stringify(updatedProgress));
+            };
+
+            // Filter stages based on search and selected level
+            const filteredStages = useMemo(() => {
+                return roadmapData.filter(stage => {
+                    const matchesSearch = stage.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                          stage.description.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchesLevel = filterLevel === "All" || stage.level === filterLevel;
+                    return matchesSearch && matchesLevel;
+                });
+            }, [searchQuery, filterLevel]);
+
+            // Calculate overall progress stats
+            const stats = useMemo(() => {
+                const total = roadmapData.length;
+                const completed = Object.values(progress).filter(status => status === "Completed").length;
+                const learning = Object.values(progress).filter(status => status === "Learning").length;
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                return { total, completed, learning, percentage };
+            }, [progress]);
+
+            return (
+                <div className="min-h-screen pb-16 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+                    
+                    {/* TOP NAVBAR */}
+                    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-brand-600 text-white rounded-lg shadow-md shadow-brand-500/20">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-brand-600 to-indigo-500 bg-clip-text text-transparent">
+                                        DevOps Roadmap Practician
+                                    </h1>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">Lộ trình học DevOps thực tế dựa trên giáo trình chuẩn quốc tế</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center space-x-4">
+                                <button 
+                                    onClick={toggleDarkMode}
+                                    className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                                    title="Chế độ Sáng/Tối"
+                                >
+                                    {darkMode ? (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m2.828 9.9a5 5 0 111.06-1.06l2.828 2.829a1 1 0 001.415-1.414l-2.829-2.828" /></svg>
+                                    ) : (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                                    )}
+                                </button>
+                                <a 
+                                    href="https://roadmap.sh/devops" 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="hidden md:flex items-center space-x-1 text-sm bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-all"
+                                >
+                                    <span>Gốc roadmap.sh</span>
+                                    <Icons.ExternalLink />
+                                </a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                        {/* HERO PANEL & PROGRESS */}
+                        <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl mb-8 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500 rounded-full filter blur-3xl opacity-10 translate-x-1/2 -translate-y-1/2"></div>
+                            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                                <div className="md:col-span-2 space-y-3">
+                                    <span className="bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Lộ trình thực chiến</span>
+                                    <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight">Master DevOps Thông Qua Các Dự Án Thực Tế</h2>
+                                    <p className="text-slate-300 max-w-xl text-sm sm:text-base">
+                                        Học DevOps không chỉ là học lý thuyết công cụ. Lộ trình này bám sát tiêu chuẩn quốc tế nhưng tập trung vào <strong>Dự án thực tiễn (Projects)</strong> giúp bạn tự tin xây dựng hạ tầng vững chắc.
+                                    </p>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-md p-5 rounded-xl border border-white/10 space-y-4">
+                                    <div className="flex justify-between text-sm font-semibold">
+                                        <span>Tiến Độ Học Tập</span>
+                                        <span className="text-brand-300 font-bold">{stats.percentage}% Hoàn thành</span>
+                                    </div>
+                                    <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                                        <div 
+                                            className="bg-gradient-to-r from-brand-400 to-indigo-400 h-3 rounded-full transition-all duration-500" 
+                                            style={{ width: `${stats.percentage}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                        <div className="bg-slate-800/60 p-2 rounded-lg">
+                                            <p className="text-slate-400">Tổng mục</p>
+                                            <p className="text-lg font-bold">{stats.total}</p>
+                                        </div>
+                                        <div className="bg-slate-800/60 p-2 rounded-lg">
+                                            <p className="text-yellow-400">Đang học</p>
+                                            <p className="text-lg font-bold text-yellow-300">{stats.learning}</p>
+                                        </div>
+                                        <div className="bg-slate-800/60 p-2 rounded-lg">
+                                            <p className="text-green-400">Xong</p>
+                                            <p className="text-lg font-bold text-green-300">{stats.completed}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* FILTER & SEARCH */}
+                        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 items-center justify-between mb-8">
+                            <div className="relative w-full sm:max-w-md">
+                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Icons.Search />
+                                </span>
+                                <input 
+                                    type="text" 
+                                    placeholder="Tìm kiếm kỹ năng, công cụ, dự án..." 
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition-all shadow-sm"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                                {["All", "Cơ bản", "Trung bình", "Nâng cao"].map((level) => (
+                                    <button
+                                        key={level}
+                                        onClick={() => setFilterLevel(level)}
+                                        className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                                            filterLevel === level 
+                                                ? "bg-brand-600 text-white shadow-md shadow-brand-500/10" 
+                                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        }`}
+                                    >
+                                        {level === "All" ? "Tất Cả Cấp Độ" : level}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ROADMAP GRID */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                            
+                            {/* TIMELINE VIEW (COL 1-7) */}
+                            <div className="lg:col-span-7 space-y-4">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 flex items-center space-x-2">
+                                        <span>Bản Đồ Học Tập</span>
+                                        <span className="text-xs bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-md text-slate-600 dark:text-slate-400">
+                                            {filteredStages.length} Chặng
+                                        </span>
+                                    </h3>
+                                    <span className="text-xs text-slate-400">Nhấp vào từng chặng để xem chi tiết dự án thực tế</span>
+                                </div>
+                                
+                                {filteredStages.length === 0 ? (
+                                    <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+                                        <p className="text-slate-500 dark:text-slate-400">Không tìm thấy chặng học nào phù hợp với bộ lọc.</p>
+                                    </div>
+                                ) : (
+                                    <div className="relative border-l-2 border-brand-500/30 dark:border-slate-800 pl-4 sm:pl-6 ml-3 space-y-6">
+                                        {filteredStages.map((stage, idx) => {
+                                            const isActive = selectedStage.id === stage.id;
+                                            const status = progress[stage.id] || "To Learn";
+                                            
+                                            // Determine badge color for status
+                                            let statusBadge = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
+                                            if (status === "Learning") statusBadge = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+                                            if (status === "Completed") statusBadge = "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+
+                                            return (
+                                                <div 
+                                                    key={stage.id}
+                                                    onClick={() => setSelectedStage(stage)}
+                                                    className={`relative p-5 rounded-xl border transition-all duration-200 cursor-pointer ${
+                                                        isActive 
+                                                            ? "bg-brand-50/50 dark:bg-brand-950/20 border-brand-500 shadow-lg shadow-brand-500/5 ring-1 ring-brand-500/20" 
+                                                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                                                    }`}
+                                                >
+                                                    {/* Node Point on Timeline */}
+                                                    <div className={`absolute -left-[27px] sm:-left-[35px] top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-4 flex items-center justify-center transition-all ${
+                                                        status === "Completed"
+                                                            ? "bg-green-500 border-green-200 dark:border-green-900"
+                                                            : status === "Learning"
+                                                            ? "bg-yellow-500 border-yellow-200 dark:border-yellow-900"
+                                                            : "bg-slate-200 dark:bg-slate-800 border-white dark:border-slate-900"
+                                                    }`}>
+                                                        {status === "Completed" && (
+                                                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-start justify-between space-x-2">
+                                                        <div className="space-y-1">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <span className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest">CHẶNG 0{idx + 1}</span>
+                                                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${stage.badgeColor}`}>{stage.level}</span>
+                                                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${statusBadge}`}>{status === "To Learn" ? "Chưa học" : status === "Learning" ? "Đang học" : "Hoàn thành"}</span>
+                                                            </div>
+                                                            <h4 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white flex items-center">
+                                                                {stage.title}
+                                                            </h4>
+                                                        </div>
+                                                        <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg font-medium whitespace-nowrap">{stage.duration}</span>
+                                                    </div>
+
+                                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
+                                                        {stage.description}
+                                                    </p>
+
+                                                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 pt-3">
+                                                        <div className="flex items-center text-xs text-brand-600 dark:text-brand-400 font-semibold">
+                                                            <span>Xem dự án thực hành</span>
+                                                            <svg className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className="flex space-x-1" onClick={(e) => e.stopPropagation()}>
+                                                            {["To Learn", "Learning", "Completed"].map((s) => (
+                                                                <button
+                                                                    key={s}
+                                                                    onClick={() => handleStatusChange(stage.id, s)}
+                                                                    className={`px-2 py-1 text-[10px] rounded font-medium border transition-all ${
+                                                                        status === s
+                                                                            ? s === "Completed" ? "bg-green-500 text-white border-green-600" : s === "Learning" ? "bg-yellow-500 text-white border-yellow-600" : "bg-slate-700 text-white border-slate-800"
+                                                                            : "bg-transparent text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                                    }`}
+                                                                >
+                                                                    {s === "To Learn" ? "Mới" : s === "Learning" ? "Học" : "Xong"}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* DETAILS PANEL (COL 8-12) */}
+                            <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                                    <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest">Chi tiết chương trình</span>
+                                            <div className="flex items-center space-x-1.5 text-xs text-slate-500">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <span>Thời lượng: {selectedStage.duration}</span>
+                                            </div>
+                                        </div>
+                                        <h3 className="font-extrabold text-xl text-slate-950 dark:text-white mt-2">
+                                            {selectedStage.title}
+                                        </h3>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                            {selectedStage.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-6 space-y-6">
+                                        {/* Core Concepts */}
+                                        <div>
+                                            <h4 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center space-x-2">
+                                                <span className="w-1.5 h-3 bg-brand-500 rounded"></span>
+                                                <span>Kiến Thức Cần Nắm</span>
+                                            </h4>
+                                            <ul className="space-y-2">
+                                                {selectedStage.concepts.map((concept, i) => (
+                                                    <li key={i} className="flex items-start space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                                                        <span className="text-brand-500 mt-1 flex-shrink-0">
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                                        </span>
+                                                        <span>{concept}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        {/* Practical Project - Highly emphasized */}
+                                        <div className="bg-brand-50/50 dark:bg-slate-950/40 p-5 rounded-xl border border-brand-100 dark:border-brand-900/30">
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <span className="p-1 bg-brand-500 text-white rounded">
+                                                    <Icons.Code />
+                                                </span>
+                                                <h4 className="font-extrabold text-sm text-brand-900 dark:text-brand-300 uppercase tracking-wider">
+                                                    Thực Hành Thực Tiễn
+                                                </h4>
+                                            </div>
+                                            <h5 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-1">
+                                                {selectedStage.practice.title}
+                                            </h5>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
+                                                {selectedStage.practice.desc}
+                                            </p>
+                                            <div className="space-y-1.5 border-t border-brand-200/50 dark:border-brand-900/20 pt-3">
+                                                <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase">Các bước thực hiện:</p>
+                                                {selectedStage.practice.steps.map((step, idx) => (
+                                                    <div key={idx} className="flex items-start space-x-2 text-xs text-slate-600 dark:text-slate-300">
+                                                        <span className="font-bold text-brand-600 dark:text-brand-400">{idx+1}.</span>
+                                                        <span>{step}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Reference Academies/Docs */}
+                                        <div>
+                                            <h4 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center space-x-2">
+                                                <span className="w-1.5 h-3 bg-indigo-500 rounded"></span>
+                                                <span>Tài Liệu & Khóa Học Uy Tín</span>
+                                            </h4>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {selectedStage.resources.map((res, i) => {
+                                                    const isYoutube = res.type === "youtube";
+                                                    const isUdemy = res.type === "udemy";
+                                                    
+                                                    return (
+                                                        <a 
+                                                            key={i} 
+                                                            href={res.url} 
+                                                            target="_blank" 
+                                                            rel="noreferrer"
+                                                            className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all"
+                                                        >
+                                                            <div className="flex items-center space-x-2 min-w-0 mr-2">
+                                                                {isYoutube && (
+                                                                    <span className="flex items-center space-x-1 bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase flex-shrink-0">
+                                                                        <Icons.YoutubeIcon />
+                                                                        <span className="hidden sm:inline">YouTube</span>
+                                                                    </span>
+                                                                )}
+                                                                {isUdemy && (
+                                                                    <span className="flex items-center space-x-1 bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase flex-shrink-0">
+                                                                        <Icons.UdemyIcon />
+                                                                        <span className="hidden sm:inline">Udemy</span>
+                                                                    </span>
+                                                                )}
+                                                                {!isYoutube && !isUdemy && (
+                                                                    <span className="bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase flex-shrink-0">
+                                                                        Tài liệu
+                                                                    </span>
+                                                                )}
+                                                                <span className="truncate">{res.name}</span>
+                                                            </div>
+                                                            <Icons.ExternalLink />
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* TIPS & MOTIVATION BOX */}
+                                <div className="bg-gradient-to-br from-indigo-50 to-brand-50 dark:from-slate-900 dark:to-indigo-950 p-5 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 flex items-start space-x-4">
+                                    <span className="text-2xl">💡</span>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-indigo-950 dark:text-indigo-300">Lời khuyên cho bạn</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                                            Hãy cố gắng hoàn thành từng dự án nhỏ trước khi nhảy sang chương tiếp theo. Việc mắc lỗi (errors) khi viết file yaml hay script chính là cơ hội quý giá nhất để bạn nâng cao kỹ năng Debug - kỹ năng cốt lõi của một DevOps Engineer xuất sắc.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </main>
+
+                    {/* FOOTER */}
+                    <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
+                        <p>© 2026 Lộ Trình DevOps Thực Chiến. Xây dựng dựa trên các tài liệu đào tạo của roadmap.sh, KodeKloud, freeCodeCamp, Udemy.</p>
+                        <p className="mt-1">Dữ liệu tiến độ được tự động lưu cục bộ trên trình duyệt của bạn (Local Storage).</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
