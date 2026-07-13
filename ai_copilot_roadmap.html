@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lộ Trình Làm Chủ AI & GitHub Copilot Cho Developers</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS Config for Premium AI Theme -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ai: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                            accent: '#06b6d4',
+                            cyan: '#22d3ee'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- React and ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts: Plus Jakarta Sans for premium modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar for premium touch */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const Icons = {
+            Sparkles: () => (
+                <svg className="w-5 h-5 text-ai-cyan animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+            ),
+            Terminal: () => (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            ),
+            Code: () => (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+            ),
+            Cpu: () => (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+            ),
+            Book: () => (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            ),
+            Shield: () => (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            ),
+            CheckCircle: () => (
+                <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            ExternalLink: () => (
+                <svg className="w-4 h-4 ml-1 inline flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+            ),
+            Search: () => (
+                <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            ),
+            Copy: () => (
+                <svg className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+            ),
+            Settings: () => (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            ),
+            Beaker: () => (
+                <svg className="w-5 h-5 text-ai-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+            )
+        };
+
+        const roadmapData = [
+            {
+                id: "stage-1",
+                title: "Nền tảng về LLM & Mô Hình Code Gen",
+                level: "Cơ bản",
+                badgeColor: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+                icon: "Cpu",
+                duration: "Tuần 1",
+                description: "Tìm hiểu cách các mô hình ngôn ngữ lớn (LLM) như GPT-4o, Claude 3.5 Sonnet và Gemini Pro được tinh chỉnh cho việc sinh mã nguồn (Code Generation) và cách hoạt động của Context Window.",
+                concepts: [
+                    "Cách LLM dự đoán token tiếp theo trong mã nguồn",
+                    "Hiểu thế nào là Context Window (Token limits, System Prompts, User Prompts)",
+                    "Hiểu về sự cân bằng nhiệt độ sinh mã (Temperature - Thấp cho mã chính xác, Cao cho sáng tạo)",
+                    "Nguy cơ 'Hallucination' (ảo tưởng mã) và cách nhận diện thư viện lỗi thời, API không tồn tại",
+                    "Cơ chế bảo mật mã nguồn: Ngăn rò rỉ dữ liệu nhạy cảm ra API công cộng"
+                ],
+                practice: {
+                    title: "Dự án: Cài đặt và Hiệu chỉnh Môi trường phát triển lý tưởng",
+                    desc: "Cấu hình extension GitHub Copilot trong VS Code/Cursor kết hợp với các cài đặt chuyên biệt, tinh chỉnh cấu hình an toàn dữ liệu để bắt đầu lập trình năng suất cao.",
+                    steps: [
+                        "Cài đặt GitHub Copilot và GitHub Copilot Chat trên IDE (VS Code hoặc JetBrains).",
+                        "Tìm hiểu cấu hình Telemetry & cài đặt loại trừ tệp tin (Copilot Exclusion) để giữ bí mật khóa API / Config nhạy cảm.",
+                        "Tạo file Playground cục bộ dạng Markdown (.md) để thử nghiệm tính năng sinh code tự động."
+                    ]
+                },
+                promptTemplate: {
+                    title: "System Prompt Tối Ưu Code Chất Lượng Cao",
+                    desc: "Sử dụng prompt này trong cấu hình chat hoặc khi bắt đầu một phiên làm việc với Copilot để định hướng đầu ra cực kỳ khắt khe về mặt chất lượng.",
+                    code: `Hãy hành động như một Chuyên gia Kỹ thuật Phần mềm (Senior Software Engineer) với hơn 10 năm kinh nghiệm. 
+Mục tiêu của bạn là viết mã nguồn sạch (Clean Code), an toàn, có khả năng mở rộng tốt và được tối ưu hóa tối đa.
+
+Khi sinh mã, hãy tuân thủ nghiêm ngặt các quy tắc sau:
+1. LUÔN LUÔN viết đầy đủ kiểu dữ liệu (Strongly-typed) nếu ngôn ngữ hỗ trợ (như TypeScript, Go, Java).
+2. Viết Unit Test đi kèm sử dụng thư viện phổ biến nhất (ví dụ: Jest, PyTest).
+3. Đóng gói mã nguồn theo các Design Pattern phù hợp (SOLID principles).
+4. KHÔNG bao giờ viết mã nguồn giả (placeholder), ghi chú TODO, hoặc bỏ lửng hàm mà không hoàn thiện.
+5. Giải thích ngắn gọn giải pháp tối ưu hóa độ phức tạp thời gian/không gian (Time & Space Complexity) ở phần cuối dưới dạng bảng Markdown.`
+                },
+                resources: [
+                    { name: "Sổ tay GitHub Copilot - Docs chính thức", url: "https://docs.github.com/en/copilot", type: "docs" },
+                    { name: "Khóa học LLM & Prompting - DeepLearning.AI", url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/", type: "docs" },
+                    { name: "YT: Thiết lập GitHub Copilot Pro & Quản lý Token 2026", url: "https://www.youtube.com/watch?v=g-pLYxcX5zI", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-2",
+                title: "Kỹ Thuật Prompting Cốt Lõi Cho Lập Trình Viên",
+                level: "Cơ bản",
+                badgeColor: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+                icon: "Code",
+                duration: "Tuần 1-2",
+                description: "Làm chủ quy trình tư duy truyền đạt thông tin cho AI (Prompt Engineering) chuyên sâu cho Developer: Kỹ thuật Zero-shot, Few-shot và cung cấp Ngữ cảnh rõ ràng.",
+                concepts: [
+                    "Quy tắc vàng 4 thành phần trong Dev-Prompt: Vai trò (Role) - Ngữ cảnh (Context) - Nhiệm vụ (Task) - Ràng buộc (Constraints)",
+                    "Zero-shot Prompting: Khi nào nên áp dụng để tạo nhanh boilerplate",
+                    "Few-shot Prompting: Cung cấp 1-3 mẫu code chuẩn (mẫu Input - Output mong muốn) để hướng dẫn mô hình sinh code đồng bộ",
+                    "Chain-of-Thought (Tư duy chuỗi): Ép AI suy luận từng bước thuật toán trước khi sinh code để giảm thiểu lỗi logic",
+                    "Cung cấp ràng buộc nghiêm ngặt (ví dụ: 'Chỉ sử dụng hook tiêu chuẩn của React', 'Không dùng thư viện ngoài')"
+                ],
+                practice: {
+                    title: "Dự án: Code Generator cho REST API bằng Few-shot Prompting",
+                    desc: "Sử dụng mẫu Prompt Few-shot để bắt ép Copilot tạo ra một loạt API endpoints theo chuẩn cấu trúc dự án của công ty bạn mà không bị lệch style.",
+                    steps: [
+                        "Soạn thảo prompt chứa cấu trúc một REST API Endpoint hoàn chỉnh (mẫu code chuẩn có sẵn kết nối database).",
+                        "Cung cấp đầu vào là cấu trúc bảng database mới (Schema JSON/SQL).",
+                        "Yêu cầu Copilot sinh ra code mới bám sát 100% định dạng, quy ước đặt tên và xử lý lỗi của code mẫu."
+                    ]
+                },
+                promptTemplate: {
+                    title: "Few-Shot Prompt Tạo API Đồng Nhất",
+                    desc: "Định dạng này giúp bạn huấn luyện Copilot viết code chuẩn chỉ tương đương với phong cách thiết kế hệ thống hiện tại của bạn.",
+                    code: `Dưới đây là một ví dụ chuẩn về cách tôi xử lý Router và Error Handling trong dự án ExpressJS (TypeScript):
+
+<mẫu_chuẩn>
+import { Router, Request, Response, NextFunction } from 'express';
+export const userRouter = Router();
+
+userRouter.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await UserService.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    return res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error); // Chuyển cho Error Middleware toàn cục xử lý
+  }
+});
+</mẫu_chuẩn>
+
+Nhiệm vụ của bạn: Hãy viết Router cho đối tượng 'Product' với các endpoint GET '/:id', POST '/' (tạo sản phẩm mới), tuân thủ 100% phong cách xử lý lỗi và cấu trúc phản hồi JSON như trong mẫu chuẩn trên.`
+                },
+                resources: [
+                    { name: "Prompting Guide cho Lập trình viên", url: "https://www.promptingguide.ai/", type: "docs" },
+                    { name: "YT: Design Patterns & Prompting hiệu quả - Hussein Nasser", url: "https://www.youtube.com/watch?v=lobO6gTxY8o", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-3",
+                title: "Định Dạng Bằng Khối Thẻ XML & Markdown",
+                level: "Trung bình",
+                badgeColor: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+                icon: "Terminal",
+                duration: "Tuần 2",
+                description: "Học cách tổ chức dữ liệu truyền tải cực kỳ logic bằng các thẻ XML giả lập và phân đoạn Markdown. Đây là định dạng tối ưu nhất được các mô hình hàng đầu khuyên dùng.",
+                concepts: [
+                    "Sức mạnh của phân tách dữ liệu bằng XML tags (`<context>`, `<files>`, `<rules>`, `<error_log>`)",
+                    "Cách gom nhiều file code nguồn phức tạp vào một Prompt mà AI không bị loạn dòng",
+                    "Cấu trúc định nghĩa output mong muốn dưới dạng JSON Schema hoặc Markdown",
+                    "Sử dụng chỉ thị đầu vào (Directives) rõ ràng cho Copilot Chat và Copilot Edits",
+                    "Tối ưu hóa các file tài liệu kỹ thuật dài bằng cách tóm tắt qua cấu trúc Schema"
+                ],
+                practice: {
+                    title: "Dự án: Refactor Module Phức Tạp Bằng Context Tagging",
+                    desc: "Lồng ghép mã nguồn lỗi thời, log lỗi hệ thống thực tế và quy chuẩn code mới của dự án vào các thẻ XML riêng biệt để yêu cầu tái cấu trúc toàn diện.",
+                    steps: [
+                        "Chuẩn bị một đoạn code chứa code rác / anti-pattern.",
+                        "Lấy file log lỗi tương ứng.",
+                        "Gửi một prompt sử dụng cấu trúc XML phân vùng rõ ràng để Copilot tự động debug và tối ưu hóa hệ thống mà không làm mất tính năng cũ."
+                    ]
+                },
+                promptTemplate: {
+                    title: "Mẫu XML Prompt Cấu Trúc Đa File",
+                    desc: "Mẫu prompt chuẩn này ngăn chặn việc mô hình bị hiểu nhầm giữa phần code cũ, file cấu hình, log lỗi, và yêu cầu nghiệp vụ mới.",
+                    code: `Hãy phân tích thông tin chi tiết được cấu trúc trong các thẻ XML dưới đây để thực hiện nhiệm vụ:
+
+<file_code_hien_tai path="src/utils/payment.js">
+function processPayment(user, amount) {
+    // Code xử lý thanh toán thiếu an toàn, không có try-catch
+    const gateway = require('stripe-sdk');
+    gateway.charge(user.stripeId, amount);
+    return true;
+}
+</file_code_hien_tai>
+
+<log_loi_he_thong>
+[Error][2026-07-10T09:45:00] TypeError: Cannot read properties of undefined (reading 'stripeId') at processPayment
+</log_loi_he_thong>
+
+<quy_chuan_bao_mat>
+- Luôn kiểm tra tính hợp lệ của tham số đầu vào (NotNull, NotEmpty) trước khi xử lý.
+- Phải bọc toàn bộ logic gọi API bên ngoài vào khối try-catch an toàn.
+- Sử dụng Async/Await thay vì lập trình đồng bộ khóa luồng.
+</quy_chuan_bao_mat>
+
+Nhiệm vụ: Hãy viết lại hàm 'processPayment' sang TypeScript, khắc phục triệt để lỗi ghi nhận trong <log_loi_he_thong> và đảm bảo các tiêu chuẩn trong <quy_chuan_bao_mat>.`
+                },
+                resources: [
+                    { name: "Kỹ thuật XML Tags - Docs chính thức Anthropic", url: "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags", type: "docs" },
+                    { name: "YT: Sức mạnh của XML tags trong xử lý Prompt phức tạp", url: "https://www.youtube.com/watch?v=0vO1XF21Xow", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-4",
+                title: "Làm Chủ Các Lệnh Slash & Agents Trong GitHub Copilot",
+                level: "Trung bình",
+                badgeColor: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+                icon: "Sparkles",
+                duration: "Tuần 2-3",
+                description: "Khai thác tối đa sức mạnh của GitHub Copilot Chat tích hợp sẵn trong IDE bằng các lệnh đặc quyền (`/explain`, `/fix`, `/tests`) và các Agent chuyên biệt như `@workspace`, `@terminal`.",
+                concepts: [
+                    "Sử dụng `@workspace` để tìm kiếm, phân tích và thực thi tác vụ trên TOÀN BỘ dự án",
+                    "Lệnh `/explain` để hiểu nhanh các thư viện legacy khó hiểu mà không cần Google",
+                    "Lệnh `/fix` để tự động dò tìm lỗi cú pháp và đề xuất mã vá thông minh",
+                    "Lệnh `/tests` để sinh nhanh các tệp tin kiểm thử bám sát framework có sẵn trong project",
+                    "Cách tương tác với `@terminal` để yêu cầu AI giải thích và sinh dòng lệnh Bash/PowerShell phức tạp trực tiếp trên Shell"
+                ],
+                practice: {
+                    title: "Dự án: Debug Toàn Bộ Workspace Không Cần Click Tay",
+                    desc: "Tạo một kịch bản lỗi trên nhiều file và sử dụng sức mạnh Agent `@workspace` để phân tích, đưa ra kế hoạch sửa đổi và áp dụng code vá tự động.",
+                    steps: [
+                        "Mở một dự án có nhiều module liên kết.",
+                        "Mở thanh chat Copilot, gõ `@workspace /explain làm thế nào luồng dữ liệu truyền từ controller sang service và DB`.",
+                        "Gây lỗi ở database layer, dùng `@workspace /fix` để AI tự tìm ra dòng code lỗi ở tầng API và vá lại toàn diện."
+                    ]
+                },
+                promptTemplate: {
+                    title: "Lệnh Chat Tối Ưu Kết Hợp Slash & Workspace",
+                    desc: "Mẹo nâng cao: Kết hợp @workspace với định dạng output chặt chẽ để nhận được phản hồi chất lượng nhất từ Copilot Chat.",
+                    code: `@workspace /explain
+Tôi đang gặp lỗi hiệu năng chậm ở chức năng thống kê báo cáo. 
+Hãy phân tích toàn bộ các file liên quan đến DB Queries và API báo cáo trong dự án này.
+
+Yêu cầu định dạng phản hồi:
+- **Nguyên nhân tiềm tàng**: Chỉ ra cụ thể file và số dòng gây tắc nghẽn (nếu có).
+- **Giải pháp tối ưu hóa**: Gợi ý cách viết lại query (ví dụ: bổ sung Indexes, dùng SELECT cụ thể thay vì SELECT *).
+- **Mã nguồn đề xuất**: Viết khối code tối ưu hóa tương ứng.`
+                },
+                resources: [
+                    { name: "Sử dụng Copilot Chat chi tiết - GitHub Docs", url: "https://docs.github.com/en/copilot/using-github-copilot/asking-github-copilot-questions-in-your-ide", type: "docs" },
+                    { name: "YT: Sử dụng Agents, Skills & Instructions trong Copilot", url: "https://www.youtube.com/watch?v=-yKALFS5ewY", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-5",
+                title: "Kiểm Thử (Testing) & Phát Hiện Lỗ Hổng Bảo Mật",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+                icon: "Shield",
+                duration: "Tuần 3",
+                description: "Sử dụng AI làm người đồng hành kiểm tra chất lượng (QA). Viết unit test tự động bao phủ toàn bộ các trường hợp biên nguy hiểm (Edge cases) và phát hiện các lỗ hổng bảo mật nghiêm trọng trước khi deploy.",
+                concepts: [
+                    "Tự động viết Unit Test, Integration Test nhanh gấp 5 lần",
+                    "Prompting để tìm các trường hợp biên: Null pointer, Buffer overflow, lỗi múi giờ (Timezone offsets)",
+                    "Dò tìm lỗ hổng bảo mật phổ biến (OWASP Top 10 - SQL Injection, XSS, CSRF, Rò rỉ thông tin đăng nhập)",
+                    "Refactor mã nguồn cũ, chuyển đổi code từ thư viện lỗi thời sang thư viện hiện đại an toàn hơn"
+                ],
+                practice: {
+                    title: "Dự án: Xây dựng Bộ Test Suite Đạt Coverage 95% Cho Module Tài Chính",
+                    desc: "Viết logic tính toán lãi suất ngân hàng phức tạp chứa nhiều nhánh rẽ điều kiện (if-else), sau đó dùng Copilot tạo test suite bao phủ 100% các nhánh rẽ và các giá trị đầu vào dị thường.",
+                    steps: [
+                        "Viết module tính toán tài chính có rủi ro lỗi cao.",
+                        "Chọn file, sử dụng lệnh `/tests` kết hợp prompt chỉ định chi tiết các trường hợp biên cần kiểm thử.",
+                        "Chạy test thực tế trên máy, phân tích báo cáo Coverage và vá các phần bị bỏ sót nhờ Copilot."
+                    ]
+                },
+                promptTemplate: {
+                    title: "Prompt Kiểm Thử Trường Hợp Biên (Edge Cases)",
+                    desc: "Prompt này giúp bạn tìm ra những lỗi tiềm ẩn mà lập trình viên thường bỏ sót khi viết code, nâng cao độ tin cậy hệ thống.",
+                    code: `Hãy viết một bộ Unit Test toàn diện bằng Jest cho file code đang mở này.
+
+Yêu cầu kiểm thử nghiêm ngặt:
+1. Viết các ca kiểm thử cơ bản (Happy Paths) để đảm bảo tính năng chạy đúng với dữ liệu chuẩn.
+2. Viết các ca kiểm thử trường hợp biên (Edge Cases) bao gồm:
+   - Các giá trị cực trị (0, số âm, số cực lớn vượt quá giới hạn integer).
+   - Chuỗi rỗng (""), giá trị Null, Undefined, ký tự đặc biệt, mã độc SQL/XSS tiềm năng.
+   - Đầu vào bị sai định dạng cấu trúc JSON.
+3. Sử dụng tính năng Mocking cho toàn bộ các truy vấn database hoặc kết nối mạng để test độc lập hoàn toàn.
+4. Mỗi test case phải có mô tả rõ ràng, cấu trúc cấu trúc AAA (Arrange - Act - Assert).`
+                },
+                resources: [
+                    { name: "Kiểm thử bảo mật chuẩn OWASP Top 10", url: "https://owasp.org/www-project-top-ten/", type: "docs" },
+                    { name: "YT: Thiết lập và viết Unit Tests chuyên nghiệp với Copilot", url: "https://www.youtube.com/watch?v=sTacWZj-Q_4", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-6",
+                title: "Tối Ưu Hóa Context Window Với File Cấu Hình Instructions",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+                icon: "Book",
+                duration: "Tuần 3-4",
+                description: "Huấn luyện GitHub Copilot hiểu được phong cách thiết kế và triết lý lập trình riêng của bạn hoặc dự án của công ty bằng cách sử dụng file chỉ thị toàn cục `.github/copilot-instructions.md`.",
+                concepts: [
+                    "Cơ chế nạp context tự động của Copilot từ các tab đang mở (Open Tabs) và file lân cận",
+                    "Cấu trúc file `.github/copilot-instructions.md` giúp tự động ép phong cách code trên mọi máy của các thành viên trong đội ngũ",
+                    "Giới hạn kích thước context để tránh mô hình bị loãng thông tin và sinh mã thiếu chính xác",
+                    "Kỹ thuật dọn dẹp import thừa, giảm bớt comment dư thừa để tối ưu hóa token truyền tải"
+                ],
+                practice: {
+                    title: "Dự án: Tạo Hệ Thống Hướng Dẫn Kiến Trúc Toàn Cục (Global Architecture Config)",
+                    desc: "Thiết lập một tệp tin cấu hình chuẩn trong repo của bạn để bất kỳ lúc nào bạn viết code, Copilot đều tự động sinh code chuẩn theo mô hình Clean Architecture hoặc DDD (Domain-Driven Design).",
+                    steps: [
+                        "Tạo thư mục `.github` ở gốc thư mục dự án của bạn.",
+                        "Tạo file `.github/copilot-instructions.md`.",
+                        "Định nghĩa các tiêu chuẩn kỹ thuật (ví dụ: Phải dùng Functional Component thay vì Class Component trong React).",
+                        "Kiểm chứng: Thử gõ tạo một component mới và quan sát cách Copilot sinh mã tự động tuân thủ cấu hình bạn đã viết."
+                    ]
+                },
+                promptTemplate: {
+                    title: "File .github/copilot-instructions.md Mẫu Chuẩn",
+                    desc: "Đặt tệp tin này ở gốc thư mục dự án của bạn để định hình tư duy của GitHub Copilot đối với toàn bộ thành viên trong team.",
+                    code: `# Quy chuẩn phát triển mã nguồn dự án
+
+## Kiến trúc & Công nghệ chủ đạo
+- Chúng ta sử dụng kiến trúc **Clean Architecture** tách biệt tầng Domain, Application, Infrastructure và Presentation.
+- Ngôn ngữ: TypeScript 100%, không dùng kiểu 'any'. Luôn bật cấu hình 'strict' trong tsconfig.
+- Framework: NestJS cho Backend, React (NextJS App Router) cho Frontend.
+
+## Quy tắc đặt tên và Cú pháp
+- Đặt tên biến, tên hàm theo kiểu camelCase (ví dụ: calculateTotalPrice).
+- Tên class, interface, types theo PascalCase (ví dụ: UserRepository).
+- Luôn sử dụng Functional Components kèm React.FC với các dự án React.
+- Toàn bộ các API response phải được bọc trong class chuẩn hóa định dạng \`ApiResponse<T>\`.
+
+## Tiêu chuẩn Bảo mật
+- KHÔNG bao giờ lưu trữ mật khẩu dưới dạng text thô. Sử dụng bcrypt với salt rounds = 10.
+- KHÔNG log thông tin nhạy cảm của người dùng (Token, Số thẻ tín dụng, Số điện thoại) ra console.`
+                },
+                resources: [
+                    { name: "Cấu hình Custom Instructions - GitHub Docs", url: "https://docs.github.com/en/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot", type: "docs" },
+                    { name: "YT: Sức mạnh của file copilot-instructions.md", url: "https://www.youtube.com/watch?v=S8ihtkSF0I4", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-7",
+                title: "Phát Triển Hệ Thống Lớn Bằng Mermaid.js & Diagram Prompting",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+                icon: "Terminal",
+                duration: "Tuần 4",
+                description: "Không chỉ viết code, một lập trình viên xuất sắc cần biết thiết kế hệ thống. Học cách yêu cầu AI tạo ra các sơ đồ cấu trúc hệ thống, sơ đồ tuần tự (Sequence diagrams) bằng Mermaid.js và dịch ngược sơ đồ thành code.",
+                concepts: [
+                    "Mermaid.js là gì và tại sao lập trình viên hiện đại cần biết để vẽ biểu đồ bằng code",
+                    "Prompting để AI thiết kế cơ sở dữ liệu quan hệ (ERD Diagram) từ yêu cầu nghiệp vụ",
+                    "Sử dụng AI thiết kế sơ đồ luồng dữ liệu microservices phức tạp",
+                    "Kỹ thuật đọc hiểu sơ đồ: Yêu cầu AI chuyển hóa sơ đồ luồng hệ thống Mermaid thành mã nguồn thật (Spring Boot, Express, NestJS)"
+                ],
+                practice: {
+                    title: "Dự án: Từ Sơ đồ Kiến trúc đến Mã nguồn Hoạt động",
+                    desc: "Yêu cầu Copilot vẽ sơ đồ cơ sở dữ liệu cho một hệ thống thương mại điện tử bằng Mermaid, sau đó bắt AI chuyển chính sơ đồ đó thành mã SQL Migration và Model thực tế.",
+                    steps: [
+                        "Mở Copilot Chat, yêu cầu viết sơ đồ ERD dạng Mermaid cho ứng dụng đặt đồ ăn.",
+                        "Xem trước biểu đồ, tinh chỉnh thông qua Prompting.",
+                        "Yêu cầu AI phân tích biểu đồ Mermaid đó để sinh ra toàn bộ file SQL ddl và Prisma Schema cho dự án."
+                    ]
+                },
+                promptTemplate: {
+                    title: "Prompt Thiết Kế Hệ Thống & Sinh Sơ Đồ Mermaid",
+                    desc: "Phương pháp trực quan hóa luồng dữ liệu hệ thống trước khi bắt tay vào viết code, giảm thiểu rủi ro thiết kế sai kiến trúc.",
+                    code: `Tôi muốn thiết kế một hệ thống Đăng ký khóa học trực tuyến (LMS) có quy mô lớn.
+Hãy đóng vai trò là Kiến trúc sư Giải pháp (Solution Architect) và thực hiện hai nhiệm vụ sau:
+
+Nhiệm vụ 1: Vẽ một sơ đồ tuần tự (Sequence Diagram) bằng cú pháp Mermaid mô tả luồng khi Học sinh click 'Đăng ký và Thanh toán khóa học'. Luồng phải đi qua: Student -> Frontend -> Gateway -> Payment Service -> Database -> Notification Service.
+
+Nhiệm vụ 2: Dựa trên sơ đồ Mermaid vừa vẽ, hãy thiết kế các bảng Cơ sở dữ liệu tương ứng (ERD Diagram) hiển thị đầy đủ các quan hệ One-to-Many, Many-to-Many giữa Student, Course, Payment và Enrollment. Chỉ rõ trường Khóa chính (PK), Khóa ngoại (FK) và Kiểu dữ liệu tương ứng.`
+                },
+                resources: [
+                    { name: "Cú pháp vẽ biểu đồ Mermaid.js chính thức", url: "https://mermaid.js.org/", type: "docs" },
+                    { name: "YT: Hướng dẫn vẽ sơ đồ & setup Copilot CLI từ đầu", url: "https://www.youtube.com/watch?v=BDxRhhs36ns", type: "youtube" }
+                ]
+            },
+            {
+                id: "stage-8",
+                title: "Lập Trình Hướng Tác Nhân (Agentic Workflows) & Tương Lai",
+                level: "Nâng cao",
+                badgeColor: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+                icon: "Sparkles",
+                duration: "Tuần 4+",
+                description: "Tiến vào biên giới tiếp theo của phát triển phần mềm: Lập trình dựa trên các Agent tự động hóa (Cursor Composer, Copilot Workspace). Nơi bạn chỉ cần mô tả nghiệp vụ và hệ thống agent sẽ tự động code, tự sửa lỗi, chạy test và hoàn thiện dự án.",
+                concepts: [
+                    "Sự khác biệt giữa Code Autocomplete đơn giản và Tác nhân tự lập trình (Agentic Coding Agents)",
+                    "Cách thức hoạt động của các công cụ Editor thế hệ mới (như Cursor, Windsurf, Copilot Edits)",
+                    "Kỹ thuật kiểm soát chất lượng mã nguồn do Agent viết: Thiết lập các 'Quality Gates' (bộ lọc code rác, quét bảo mật tự động)",
+                    "Kỹ năng tối thượng trong tương lai: Tư duy phê phán, đọc hiểu, phân tích hệ thống và ra quyết định thay vì gõ phím cơ học"
+                ],
+                practice: {
+                    title: "Dự án: Xây dựng Tính năng Phức tạp Bằng Multi-file Copilot Edits",
+                    desc: "Sử dụng tính năng chỉnh sửa đa tệp của các IDE thế hệ mới để giao việc cho AI tự động sửa đổi đồng bộ frontend, backend, database schema chỉ bằng một câu lệnh tự nhiên.",
+                    steps: [
+                        "Chọn chế độ Edits (hoặc Compose) trong IDE.",
+                        "Giao nhiệm vụ: 'Bổ sung tính năng xác thực 2 lớp (2FA) bằng mã OTP gửi về Email'.",
+                        "Quan sát cách AI tự động tìm kiếm, tạo mới và sửa đổi code đồng loạt trên 4 file khác nhau, sau đó chạy test kiểm thử."
+                    ]
+                },
+                promptTemplate: {
+                    title: "Prompt Giao Việc Cho Coding Agent Đa File",
+                    desc: "Mẫu prompt chuẩn cấu trúc để giao việc cho các hệ thống Agent tự động chỉnh sửa dự án quy mô lớn một cách an toàn nhất.",
+                    code: `Bối cảnh: Tôi cần nâng cấp hệ thống hiện tại để hỗ trợ thanh toán qua Ví điện tử Momo.
+
+Yêu cầu thực thi đa file:
+1. Tạo một Service mới tại 'src/services/momo.service.ts' để xử lý chữ ký số SHA256 và giao tiếp với API của Momo.
+2. Cập nhật file 'src/controllers/payment.controller.ts' để bổ sung endpoint nhận dữ liệu IPN (Instant Payment Notification) từ Momo gửi về.
+3. Chỉnh sửa Database Schema trong 'prisma/schema.prisma' để thêm trường 'paymentGateway' (enum: STRIPE, MOMO) vào bảng Transactions.
+4. Viết lại Unit Test tương ứng trong thư mục tests để bao phủ luồng thanh toán Momo thành công và Momo thất bại.
+
+LƯU Ý: Trước khi chỉnh sửa, hãy liệt kê danh sách các file bạn định can thiệp và giải thích sơ bộ kiến trúc triển khai để tôi phê duyệt.`
+                },
+                resources: [
+                    { name: "Khám phá thế giới AI Agentic Coding - DeepLearning.AI", url: "https://www.deeplearning.ai/the-batch/how-agentic-workflows-are-shaping-the-future-of-ai/", type: "docs" },
+                    { name: "YT: Multi-file Agentic Debugging Loop bằng Copilot", url: "https://www.youtube.com/watch?v=q_7G4LYVz9o", type: "youtube" }
+                ]
+            }
+        ];
+
+        function App() {
+            const [selectedStage, setSelectedStage] = useState(roadmapData[0]);
+            const [searchQuery, setSearchQuery] = useState("");
+            const [filterLevel, setFilterLevel] = useState("All");
+            const [darkMode, setDarkMode] = useState(true);
+            const [progress, setProgress] = useState({});
+            const [copied, setCopied] = useState(false);
+            const [notification, setNotification] = useState("");
+            const [activeTab, setActiveTab] = useState("roadmap"); // "roadmap" or "lab"
+            
+            const [apiKey, setApiKey] = useState("");
+            const [showSettings, setShowSettings] = useState(false);
+            const [labTool, setLabTool] = useState("optimizer"); // "optimizer", "copilot-ins", "tester"
+            
+            // Tool 1: Prompt Optimizer States
+            const [rawPrompt, setRawPrompt] = useState("");
+            const [optimizedResult, setOptimizedResult] = useState("");
+            const [isOptimizing, setIsOptimizing] = useState(false);
+
+            // Tool 2: Copilot Instructions States
+            const [techLanguage, setTechLanguage] = useState("TypeScript");
+            const [techFramework, setTechFramework] = useState("React (Next.js)");
+            const [codingStyle, setCodingStyle] = useState("Functional, Clean Architecture");
+            const [instructionResult, setInstructionResult] = useState("");
+            const [isGeneratingIns, setIsGeneratingIns] = useState(false);
+
+            // Tool 3: Security & Test Gen States
+            const [sourceCode, setSourceCode] = useState("");
+            const [testResult, setTestResult] = useState("");
+            const [isTesting, setIsTesting] = useState(false);
+
+            // Synchronize dark mode and load progress/API key
+            useEffect(() => {
+                const savedProgress = localStorage.getItem("ai_copilot_roadmap_progress");
+                if (savedProgress) {
+                    setProgress(JSON.parse(savedProgress));
+                }
+
+                const savedKey = localStorage.getItem("gemini_api_key");
+                if (savedKey) {
+                    setApiKey(savedKey);
+                }
+                
+                if (darkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, []);
+
+            const toggleDarkMode = () => {
+                setDarkMode(!darkMode);
+                document.documentElement.classList.toggle('dark');
+            };
+
+            const handleStatusChange = (stageId, status) => {
+                const updatedProgress = { ...progress, [stageId]: status };
+                setProgress(updatedProgress);
+                localStorage.setItem("ai_copilot_roadmap_progress", JSON.stringify(updatedProgress));
+                showToast(`Đã cập nhật tiến độ: ${status === "Completed" ? "Hoàn thành" : status === "Learning" ? "Đang học" : "Chưa học"}`);
+            };
+
+            const showToast = (msg) => {
+                setNotification(msg);
+                setTimeout(() => setNotification(""), 3000);
+            };
+
+            const copyToClipboard = (text) => {
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = text;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand("copy");
+                    setCopied(true);
+                    showToast("Đã sao chép nội dung thành công!");
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                    showToast("Lỗi sao chép! Hãy bôi đen và copy thủ công.");
+                }
+                document.body.removeChild(tempTextArea);
+            };
+
+            const handleSaveApiKey = (key) => {
+                setApiKey(key);
+                localStorage.setItem("gemini_api_key", key);
+                showToast("Đã lưu API Key thành công!");
+                setShowSettings(false);
+            };
+
+            const callGeminiAPI = async (systemPrompt, userQuery) => {
+                // Exponential backoff strategy implementation
+                const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+                    try {
+                        const response = await fetch(url, options);
+                        if (!response.ok) {
+                            if (response.status === 429 && retries > 0) {
+                                // Throttled, perform backoff retry without logging to console.error
+                                await new Promise(res => setTimeout(res, delay));
+                                return fetchWithRetry(url, options, retries - 1, delay * 2);
+                            }
+                            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                        }
+                        return response;
+                    } catch (error) {
+                        if (retries > 0) {
+                            await new Promise(res => setTimeout(res, delay));
+                            return fetchWithRetry(url, options, retries - 1, delay * 2);
+                        }
+                        throw error;
+                    }
+                };
+
+                const currentKey = apiKey.trim() || "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${currentKey}`;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    }
+                };
+
+                try {
+                    const response = await fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "Không nhận được phản hồi từ mô hình.";
+                } catch (err) {
+                    throw new Error(err.message || "Đã xảy ra lỗi kết nối với Gemini API.");
+                }
+            };
+
+            const handleOptimizePrompt = async () => {
+                if (!rawPrompt.trim()) {
+                    showToast("Vui lòng nhập nội dung prompt thô!");
+                    return;
+                }
+                setIsOptimizing(true);
+                setOptimizedResult("");
+
+                const systemPrompt = `Bạn là một Chuyên gia Kỹ thuật Prompt (Prompt Engineer) xuất sắc. 
+Nhiệm vụ của bạn là tối ưu hóa prompt thô mà người dùng nhập vào để tạo ra một prompt hoàn hảo để chạy trên GitHub Copilot hoặc các LLM khác.
+Cấu trúc đầu ra của bạn phải bao gồm các phần rõ ràng bằng Markdown:
+1. **Mục tiêu chính**: Xác định nhiệm vụ cốt lõi.
+2. **Vai trò kiến nghị (Role)**: Đặt vai trò chuyên môn cho AI.
+3. **Ngữ cảnh & Các khối thẻ XML gợi ý (<context>, <rules>, <constraints>)**: Tổ chức dữ liệu đầu vào.
+4. **Ràng buộc nghiêm ngặt (Strict Constraints)**: Giúp giảm lỗi ảo tưởng.
+5. **Prompt Hoàn Thiện (Bản Copy-Ready)**: Đoạn prompt tối ưu hóa cuối cùng để lập trình viên chỉ cần copy-paste.`;
+
+                try {
+                    const result = await callGeminiAPI(systemPrompt, `Hãy tối ưu hóa prompt lập trình sau đây: "${rawPrompt}"`);
+                    setOptimizedResult(result);
+                    showToast("Đã tối ưu hóa prompt thành công!");
+                } catch (err) {
+                    setOptimizedResult(`[Lỗi] ${err.message}. Vui lòng kiểm tra lại API Key trong phần Cấu hình.`);
+                } finally {
+                    setIsOptimizing(false);
+                }
+            };
+
+            const handleGenerateInstructions = async () => {
+                setIsGeneratingIns(true);
+                setInstructionResult("");
+
+                const systemPrompt = `Bạn là một Solution Architect dày dặn kinh nghiệm. 
+Dựa trên ngôn ngữ lập trình, framework, và phong cách viết code của người dùng, hãy tạo ra nội dung tệp tin cấu hình nghiêm ngặt ".github/copilot-instructions.md" giúp định hình tư duy của GitHub Copilot đối với dự án này.
+Phản hồi trực tiếp bằng mã Markdown của tệp tin cấu hình, giải thích ngắn gọn lý do chọn các cấu hình đó ở phần cuối.`;
+
+                const query = `Ngôn ngữ: ${techLanguage}
+Framework: ${techFramework}
+Phong cách code & Kiến trúc: ${codingStyle}`;
+
+                try {
+                    const result = await callGeminiAPI(systemPrompt, query);
+                    setInstructionResult(result);
+                    showToast("Đã khởi tạo Instructions thành công!");
+                } catch (err) {
+                    setInstructionResult(`[Lỗi] ${err.message}. Vui lòng kiểm tra lại API Key.`);
+                } finally {
+                    setIsGeneratingIns(false);
+                }
+            };
+
+            const handleReviewAndTest = async () => {
+                if (!sourceCode.trim()) {
+                    showToast("Vui lòng nhập mã nguồn cần phân tích!");
+                    return;
+                }
+                setIsTesting(true);
+                setTestResult("");
+
+                const systemPrompt = `Bạn là Senior QA & Security Engineer chuyên trách.
+Hãy phân tích mã nguồn được cung cấp để:
+1. Xác định các lỗ hổng bảo mật tiềm tàng (theo chuẩn OWASP Top 10) hoặc các dòng code tối ưu chưa tốt.
+2. Thiết lập cấu trúc bộ Unit Test hoàn thiện sử dụng framework kiểm thử tương thích với ngôn ngữ của code (ví dụ: Jest cho JS/TS, PyTest cho Python).
+3. Đảm bảo viết đầy đủ mã nguồn test bao quát các trường hợp biên (Edge Cases), xử lý ngoại lệ, và mock các module bên ngoài.`;
+
+                try {
+                    const result = await callGeminiAPI(systemPrompt, sourceCode);
+                    setTestResult(result);
+                    showToast("Phân tích và tạo Unit Test hoàn tất!");
+                } catch (err) {
+                    setTestResult(`[Lỗi] ${err.message}. Vui lòng kiểm tra lại API Key.`);
+                } finally {
+                    setIsTesting(false);
+                }
+            };
+
+            const filteredStages = useMemo(() => {
+                return roadmapData.filter(stage => {
+                    const matchesSearch = stage.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                          stage.description.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchesLevel = filterLevel === "All" || stage.level === filterLevel;
+                    return matchesSearch && matchesLevel;
+                });
+            }, [searchQuery, filterLevel]);
+
+            const stats = useMemo(() => {
+                const total = roadmapData.length;
+                const completed = Object.values(progress).filter(status => status === "Completed").length;
+                const learning = Object.values(progress).filter(status => status === "Learning").length;
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                return { total, completed, learning, percentage };
+            }, [progress]);
+
+            return (
+                <div className="min-h-screen pb-16 bg-slate-950 text-slate-100 transition-colors">
+                    
+                    {/* Toast Notification */}
+                    {notification && (
+                        <div className="fixed bottom-6 right-6 z-50 bg-ai-700 text-white px-5 py-3 rounded-xl shadow-2xl border border-ai-cyan/30 flex items-center space-x-2 animate-bounce">
+                            <span className="text-ai-cyan">✦</span>
+                            <span className="text-sm font-semibold">{notification}</span>
+                        </div>
+                    )}
+
+                    {/* Settings Modal (API Key configuration) */}
+                    {showSettings && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                            <div className="w-full max-w-md p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+                                <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                                    <Icons.Settings /> Cấu hình API Gemini (Google AI Studio)
+                                </h3>
+                                <p className="text-xs text-slate-400 mt-2">
+                                    Nhập API Key của bạn để sử dụng các tính năng tương tác tự động hóa với LLM trong Phòng thí nghiệm AI. Khóa này được lưu an toàn tại local storage của bạn.
+                                </p>
+                                <div className="mt-4">
+                                    <input 
+                                        type="password" 
+                                        placeholder="Nhập Gemini API Key (AIzaSy...)" 
+                                        defaultValue={apiKey}
+                                        id="api-key-input"
+                                        className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 text-sm text-slate-100"
+                                    />
+                                    <div className="flex justify-between items-center mt-2">
+                                        <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="text-[10px] text-ai-cyan hover:underline flex items-center">
+                                            Lấy API Key miễn phí tại đây <Icons.ExternalLink />
+                                        </a>
+                                        {apiKey && (
+                                            <button 
+                                                onClick={() => {
+                                                    localStorage.removeItem("gemini_api_key");
+                                                    setApiKey("");
+                                                    showToast("Đã xóa API Key thành công!");
+                                                }}
+                                                className="text-[10px] text-red-400 hover:underline"
+                                            >
+                                                Xóa Key hiện tại
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex justify-end space-x-3 mt-6">
+                                    <button 
+                                        onClick={() => setShowSettings(false)}
+                                        className="px-4 py-2 text-xs font-semibold bg-slate-800 rounded-xl hover:bg-slate-700 transition"
+                                    >
+                                        Hủy bỏ
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            const val = document.getElementById("api-key-input").value;
+                                            handleSaveApiKey(val);
+                                        }}
+                                        className="px-4 py-2 text-xs font-semibold bg-gradient-to-r from-ai-600 to-ai-500 text-white rounded-xl shadow-lg shadow-ai-500/20"
+                                    >
+                                        Lưu lại
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* HEADER */}
+                    <header className="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 transition-colors">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-gradient-to-tr from-ai-600 to-ai-accent text-white rounded-xl shadow-lg shadow-ai-500/20">
+                                    <svg className="w-6 h-6 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-ai-cyan to-ai-500 bg-clip-text text-transparent flex items-center gap-1.5">
+                                        AI & Copilot Developer Roadmap
+                                    </h1>
+                                    <p className="text-xs text-slate-400 font-medium hidden sm:block">Lập trình hiệu suất cao tích hợp Phòng Thí Nghiệm Gemini API</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <button 
+                                    onClick={() => setShowSettings(true)}
+                                    className={`p-2 rounded-xl border transition-all ${apiKey ? "bg-ai-500/10 border-ai-500/30 text-ai-cyan" : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"}`}
+                                    title="Cấu hình API Key"
+                                >
+                                    <Icons.Settings />
+                                </button>
+                                <a 
+                                    href="https://github.com/features/copilot" 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="hidden md:flex items-center space-x-1.5 text-xs bg-slate-900 border border-slate-800 text-slate-300 px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-all"
+                                >
+                                    <span>GitHub Copilot Website</span>
+                                    <Icons.ExternalLink />
+                                </a>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* MAIN CONTENT CONTAINER */}
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                        
+                        {/* HERO PANEL WITH DUAL-TAB TOGGLER */}
+                        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white rounded-2xl p-6 sm:p-8 shadow-2xl mb-8 relative overflow-hidden border border-slate-800/80">
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-ai-500 rounded-full filter blur-[120px] opacity-10 translate-x-1/2 -translate-y-1/2"></div>
+                            <div className="absolute bottom-0 left-10 w-64 h-64 bg-ai-cyan rounded-full filter blur-[100px] opacity-10"></div>
+                            
+                            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                <div className="lg:col-span-8 space-y-4">
+                                    <span className="bg-ai-500/20 text-ai-cyan border border-ai-cyan/30 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                                        KIẾN TẠO PHƯƠNG THỨC LẬP TRÌNH TƯƠNG LAI
+                                    </span>
+                                    <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
+                                        Biến AI Thành Đồng Nghiệp <br className="hidden sm:inline" /> Lập Trình Xuất Sắc Nhất
+                                    </h2>
+                                    <p className="text-slate-300 max-w-xl text-sm sm:text-base leading-relaxed">
+                                        Làm chủ kỹ nghệ Prompting chất lượng cao để sinh mã tối ưu. Hãy học theo **Lộ trình học tập** hoặc thực nghiệm trực tiếp ngay tại **Phòng thí nghiệm AI** tích hợp mô hình Gemini.
+                                    </p>
+                                    
+                                    {/* NAVIGATION SWITCHER */}
+                                    <div className="flex space-x-3 pt-2">
+                                        <button 
+                                            onClick={() => setActiveTab("roadmap")}
+                                            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "roadmap" ? "bg-gradient-to-r from-ai-600 to-ai-500 text-white shadow-xl shadow-ai-500/25" : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"}`}
+                                        >
+                                            <Icons.Book />
+                                            <span>Lộ Trình Học Tập</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab("lab")}
+                                            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "lab" ? "bg-gradient-to-r from-ai-600 to-ai-500 text-white shadow-xl shadow-ai-500/25" : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"}`}
+                                        >
+                                            <Icons.Beaker />
+                                            <span>Phòng Thí Nghiệm AI</span>
+                                            <span className="text-[9px] bg-ai-cyan/20 text-ai-cyan border border-ai-cyan/30 px-1.5 py-0.5 rounded-full font-extrabold uppercase animate-pulse">Gemini</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="lg:col-span-4 bg-slate-900/80 backdrop-blur-md p-5 rounded-xl border border-slate-800 space-y-4 shadow-xl">
+                                    <div className="flex justify-between text-sm font-semibold">
+                                        <span className="flex items-center gap-1.5"><Icons.Sparkles /> Tiến độ huấn luyện</span>
+                                        <span className="text-ai-cyan font-bold">{stats.percentage}% Hoàn thành</span>
+                                    </div>
+                                    <div className="w-full bg-slate-850 rounded-full h-3 overflow-hidden">
+                                        <div 
+                                            className="bg-gradient-to-r from-ai-cyan to-ai-500 h-3 rounded-full transition-all duration-500" 
+                                            style={{ width: `${stats.percentage}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                        <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                            <p className="text-slate-500">Tổng chặng</p>
+                                            <p className="text-base font-bold text-slate-100">{stats.total}</p>
+                                        </div>
+                                        <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                            <p className="text-yellow-400">Đang luyện</p>
+                                            <p className="text-base font-bold text-yellow-300">{stats.learning}</p>
+                                        </div>
+                                        <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                            <p className="text-emerald-400 font-semibold">Xong</p>
+                                            <p className="text-base font-bold text-emerald-300">{stats.completed}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* TAB 1: ROADMAP SECTION */}
+                        {activeTab === "roadmap" && (
+                            <div>
+                                {/* SEARCH AND FILTER */}
+                                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 items-center justify-between mb-8">
+                                    <div className="relative w-full sm:max-w-md">
+                                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Icons.Search />
+                                        </span>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Tìm kỹ thuật Prompt, CLI, XML, Agent..." 
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 focus:border-transparent text-sm transition-all text-slate-200"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="flex space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                                        {["All", "Cơ bản", "Trung bình", "Nâng cao"].map((level) => (
+                                            <button
+                                                key={level}
+                                                onClick={() => setFilterLevel(level)}
+                                                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                                                    filterLevel === level 
+                                                        ? "bg-gradient-to-r from-ai-600 to-ai-500 text-white shadow-lg shadow-ai-500/10" 
+                                                        : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-white"
+                                                }`}
+                                            >
+                                                {level === "All" ? "Tất cả cấp độ" : level}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                    {/* TIMELINE COLUMN - LEFT (7/12) */}
+                                    <div className="lg:col-span-7 space-y-4">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h3 className="font-bold text-lg text-slate-200 flex items-center space-x-2">
+                                                <Icons.Sparkles />
+                                                <span>Bản Đồ Kỹ Năng Lập Trình AI</span>
+                                                <span className="text-xs bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md text-slate-400">
+                                                    {filteredStages.length} Chặng huấn luyện
+                                                </span>
+                                            </h3>
+                                            <span className="text-xs text-slate-500 hidden sm:inline">Nhấp để xem cấu trúc Prompt tương ứng</span>
+                                        </div>
+                                        
+                                        {filteredStages.length === 0 ? (
+                                            <div className="text-center py-16 bg-slate-900/50 rounded-2xl border border-dashed border-slate-800">
+                                                <p className="text-slate-500">Không tìm thấy thông tin hoặc kỹ năng phù hợp.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="relative border-l border-slate-800 pl-4 sm:pl-6 ml-3 space-y-5">
+                                                {filteredStages.map((stage, idx) => {
+                                                    const isActive = selectedStage.id === stage.id;
+                                                    const status = progress[stage.id] || "To Learn";
+                                                    
+                                                    let statusBadge = "bg-slate-900 text-slate-400 border border-slate-800";
+                                                    if (status === "Learning") statusBadge = "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+                                                    if (status === "Completed") statusBadge = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+
+                                                    return (
+                                                        <div 
+                                                            key={stage.id}
+                                                            onClick={() => setSelectedStage(stage)}
+                                                            className={`relative p-5 rounded-xl border transition-all duration-200 cursor-pointer ${
+                                                                isActive 
+                                                                    ? "bg-slate-900/90 border-ai-500 shadow-xl shadow-ai-500/5 ring-1 ring-ai-500/20" 
+                                                                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700"
+                                                            }`}
+                                                        >
+                                                            {/* Custom Node Point decoration */}
+                                                            <div className={`absolute -left-[25px] sm:-left-[31px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                                                                status === "Completed"
+                                                                    ? "bg-emerald-500 border-emerald-300"
+                                                                    : status === "Learning"
+                                                                    ? "bg-yellow-500 border-yellow-300"
+                                                                    : "bg-slate-800 border-slate-700"
+                                                            }`}>
+                                                                {status === "Completed" && (
+                                                                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                                                )}
+                                                            </div>
+
+                                                            <div className="flex items-start justify-between space-x-2">
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <span className="text-[10px] font-bold text-ai-cyan uppercase tracking-widest">MODULE 0{idx + 1}</span>
+                                                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${stage.badgeColor}`}>{stage.level}</span>
+                                                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${statusBadge}`}>{status === "To Learn" ? "Chưa học" : status === "Learning" ? "Đang luyện" : "Đã xong"}</span>
+                                                                    </div>
+                                                                    <h4 className="font-bold text-base sm:text-lg text-slate-100 flex items-center gap-2">
+                                                                        {stage.title}
+                                                                    </h4>
+                                                                </div>
+                                                                <span className="text-xs text-ai-cyan bg-ai-500/10 border border-ai-cyan/20 px-2.5 py-1 rounded-lg font-medium whitespace-nowrap">{stage.duration}</span>
+                                                            </div>
+
+                                                            <p className="text-sm text-slate-400 mt-2 line-clamp-2">
+                                                                {stage.description}
+                                                            </p>
+
+                                                            <div className="mt-3 flex flex-wrap gap-2 items-center justify-between border-t border-slate-800/80 pt-3" onClick={(e) => e.stopPropagation()}>
+                                                                <div className="flex items-center text-xs text-ai-cyan font-semibold">
+                                                                    <span>Xem Prompt mẫu & Tài liệu</span>
+                                                                    <svg className="w-3.5 h-3.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                    </svg>
+                                                                </div>
+                                                                <div className="flex space-x-1">
+                                                                    {["To Learn", "Learning", "Completed"].map((s) => (
+                                                                        <button
+                                                                            key={s}
+                                                                            onClick={() => handleStatusChange(stage.id, s)}
+                                                                            className={`px-2 py-1 text-[10px] rounded-lg font-bold border transition-all ${
+                                                                                status === s
+                                                                                    ? s === "Completed" ? "bg-emerald-600 text-white border-emerald-500" : s === "Learning" ? "bg-yellow-500 text-slate-950 border-yellow-400" : "bg-slate-700 text-white border-slate-600"
+                                                                                    : "bg-transparent text-slate-500 border-slate-800 hover:text-slate-300"
+                                                                            }`}
+                                                                        >
+                                                                            {s === "To Learn" ? "Chưa học" : s === "Learning" ? "Đang học" : "Hoàn thành"}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* DETAIL VIEWER COLUMN - RIGHT (5/12) */}
+                                    <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                                            
+                                            <div className="p-6 border-b border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-ai-cyan uppercase tracking-widest">Chi tiết huấn luyện</span>
+                                                    <div className="flex items-center space-x-1.5 text-xs text-slate-400">
+                                                        <svg className="w-4 h-4 text-ai-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span>{selectedStage.duration}</span>
+                                                    </div>
+                                                </div>
+                                                <h3 className="font-extrabold text-xl text-slate-100 mt-2">
+                                                    {selectedStage.title}
+                                                </h3>
+                                                <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                                                    {selectedStage.description}
+                                                </p>
+                                            </div>
+
+                                            <div className="p-6 space-y-6">
+                                                {/* Core Concepts */}
+                                                <div>
+                                                    <h4 className="font-bold text-xs text-ai-cyan uppercase tracking-wider mb-3 flex items-center space-x-2">
+                                                        <span className="w-1.5 h-3 bg-ai-cyan rounded"></span>
+                                                        <span>Kiến thức cốt lõi cần nắm</span>
+                                                    </h4>
+                                                    <ul className="space-y-2.5">
+                                                        {selectedStage.concepts.map((concept, i) => (
+                                                            <li key={i} className="flex items-start space-x-2 text-sm text-slate-300">
+                                                                <span className="text-ai-cyan mt-1 flex-shrink-0">
+                                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                                                </span>
+                                                                <span className="leading-relaxed">{concept}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                {/* Prompt Template Section */}
+                                                <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 relative group">
+                                                    <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="p-1 bg-ai-500/20 text-ai-cyan rounded">
+                                                                <Icons.Sparkles />
+                                                            </span>
+                                                            <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider">
+                                                                Prompt Template chuẩn hoá
+                                                            </h4>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => copyToClipboard(selectedStage.promptTemplate.code)}
+                                                            className="flex items-center space-x-1 text-xs bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition-all group-hover:scale-105"
+                                                            title="Sao chép Prompt"
+                                                        >
+                                                            <Icons.Copy />
+                                                            <span>Sao chép</span>
+                                                        </button>
+                                                    </div>
+                                                    <h5 className="font-bold text-xs text-ai-cyan mb-1.5">{selectedStage.promptTemplate.title}</h5>
+                                                    <p className="text-[11px] text-slate-400 mb-3">{selectedStage.promptTemplate.desc}</p>
+                                                    <div className="relative">
+                                                        <pre className="text-[11px] font-mono text-slate-300 bg-slate-950/90 p-3 rounded-lg overflow-x-auto border border-slate-900 max-h-64 leading-relaxed whitespace-pre-wrap">
+                                                            {selectedStage.promptTemplate.code}
+                                                        </pre>
+                                                    </div>
+                                                </div>
+
+                                                {/* Practical Task */}
+                                                <div className="bg-ai-500/5 p-5 rounded-xl border border-ai-500/10">
+                                                    <div className="flex items-center space-x-2 mb-2">
+                                                        <span className="p-1 bg-ai-500 text-white rounded">
+                                                            <Icons.Code />
+                                                        </span>
+                                                        <h4 className="font-bold text-xs text-ai-cyan uppercase tracking-wider">
+                                                            BÀI TẬP THỰC CHIẾN
+                                                        </h4>
+                                                    </div>
+                                                    <h5 className="font-bold text-sm text-slate-200 mb-1">
+                                                        {selectedStage.practice.title}
+                                                    </h5>
+                                                    <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                                                        {selectedStage.practice.desc}
+                                                    </p>
+                                                    <div className="space-y-2 border-t border-slate-800 pt-3">
+                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Các bước thực hiện:</p>
+                                                        {selectedStage.practice.steps.map((step, idx) => (
+                                                            <div key={idx} className="flex items-start space-x-2 text-xs text-slate-300">
+                                                                <span className="font-bold text-ai-cyan">{idx+1}.</span>
+                                                                <span className="leading-relaxed">{step}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Reference Docs */}
+                                                <div>
+                                                    <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                                                        <span className="w-1.5 h-3 bg-slate-500 rounded"></span>
+                                                        <span>Tài liệu tham khảo chuyên sâu</span>
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        {selectedStage.resources.map((res, i) => {
+                                                            const isYoutube = res.type === "youtube";
+                                                            return (
+                                                                <a 
+                                                                    key={i} 
+                                                                    href={res.url} 
+                                                                    target="_blank" 
+                                                                    rel="noreferrer"
+                                                                    className="flex items-center justify-between p-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold text-slate-300 transition-all"
+                                                                >
+                                                                    <div className="flex items-center space-x-2 min-w-0">
+                                                                        {isYoutube ? (
+                                                                            <span className="bg-red-500/10 text-red-400 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase flex-shrink-0">
+                                                                                YouTube
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="bg-ai-500/10 text-ai-cyan text-[9px] px-1.5 py-0.5 rounded font-bold uppercase flex-shrink-0">
+                                                                                Tài liệu
+                                                                            </span>
+                                                                        )}
+                                                                        <span className="truncate">{res.name}</span>
+                                                                    </div>
+                                                                    <Icons.ExternalLink />
+                                                                </a>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        {/* Tips Widget */}
+                                        <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex items-start space-x-3">
+                                            <span className="text-xl">💡</span>
+                                            <div>
+                                                <h4 className="font-bold text-xs text-ai-cyan uppercase tracking-wider">Mẹo tối ưu hoá GitHub Copilot</h4>
+                                                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                                    Để Copilot đạt hiệu năng cao nhất, hãy luôn mở sẵn các file code có liên quan đến chức năng bạn đang viết ở các thẻ trình duyệt (tabs). Copilot sử dụng cơ chế nạp context dựa trên các file hoạt động gần đây để đưa ra gợi ý chính xác hơn 60% so với chỉ đọc 1 file duy nhất.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 2: INTERACTIVE AI LAB (GEMINI POWERED) */}
+                        {activeTab === "lab" && (
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                
+                                {/* LAB MENU CONTROL PANEL */}
+                                <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                                    <h3 className="font-bold text-base text-slate-100 flex items-center gap-2 pb-2 border-b border-slate-800">
+                                        <Icons.Beaker /> Danh sách công cụ
+                                    </h3>
+                                    
+                                    {!apiKey && (
+                                        <div className="p-3.5 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-xs text-yellow-300 space-y-2">
+                                            <p className="font-semibold flex items-center gap-1.5">⚠️ Thiếu API Key!</p>
+                                            <p className="leading-relaxed">Bạn cần cấu hình Gemini API Key để khởi chạy các tác vụ trong phòng thí nghiệm này.</p>
+                                            <button 
+                                                onClick={() => setShowSettings(true)}
+                                                className="px-3 py-1.5 bg-yellow-500 text-slate-950 font-bold rounded-lg hover:bg-yellow-400 transition text-[10px]"
+                                            >
+                                                Cấu hình ngay
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <button 
+                                            onClick={() => setLabTool("optimizer")}
+                                            className={`w-full text-left p-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${labTool === "optimizer" ? "bg-ai-500/10 border-ai-500/30 text-white" : "bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-950"}`}
+                                        >
+                                            <span>1. Trình Tối Ưu Hóa Prompt</span>
+                                            <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-bold uppercase">Prompt Opt</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setLabTool("copilot-ins")}
+                                            className={`w-full text-left p-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${labTool === "copilot-ins" ? "bg-ai-500/10 border-ai-500/30 text-white" : "bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-950"}`}
+                                        >
+                                            <span>2. Khởi Tạo Copilot Instructions</span>
+                                            <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-bold uppercase">Instructions</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setLabTool("tester")}
+                                            className={`w-full text-left p-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${labTool === "tester" ? "bg-ai-500/10 border-ai-500/30 text-white" : "bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-950"}`}
+                                        >
+                                            <span>3. Phân Tích Bảo Mật & Unit Test</span>
+                                            <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-bold uppercase">Security & Test</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Quick Warning Guardrail */}
+                                    <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+                                        <p className="font-bold text-slate-300 mb-1">💡 Lưu ý bảo mật</p>
+                                        Mọi yêu cầu gửi lên API đều chạy trực tiếp từ trình duyệt của bạn đến Google Gemini Endpoint. Tuyệt đối không dán các thông tin cấu hình sản xuất (production secrets), mật khẩu, hoặc dữ liệu khách hàng nhạy cảm.
+                                    </div>
+                                </div>
+
+                                {/* LAB DYNAMIC WORKSPACE (8/12) */}
+                                <div className="lg:col-span-8 space-y-6">
+                                    
+                                    {/* TOOL 1: PROMPT OPTIMIZER WORKSPACE */}
+                                    {labTool === "optimizer" && (
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
+                                            <div className="border-b border-slate-800 pb-3">
+                                                <h3 className="font-extrabold text-lg text-slate-100 flex items-center gap-2">
+                                                    <Icons.Sparkles /> Trình Tối Ưu Hóa Prompt Chuyên Nghiệp (Stage 2 & 3)
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    Nhập một yêu cầu lập trình đơn giản. Gemini sẽ chuyển hóa nó thành prompt có cấu trúc chặt chẽ kèm vai trò, ngữ cảnh và thẻ XML để nạp vào Copilot đạt kết quả tối đa.
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Prompt Thô Đầu Vào:</label>
+                                                <textarea 
+                                                    value={rawPrompt}
+                                                    onChange={(e) => setRawPrompt(e.target.value)}
+                                                    placeholder="Ví dụ: Viết hàm NodeJS để gửi email bằng nodemailer có xử lý lỗi..."
+                                                    rows={3}
+                                                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 text-sm text-slate-200 placeholder-slate-600"
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-end">
+                                                <button 
+                                                    onClick={handleOptimizePrompt}
+                                                    disabled={isOptimizing || !apiKey}
+                                                    className="px-5 py-2.5 bg-gradient-to-r from-ai-600 to-ai-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center space-x-2"
+                                                >
+                                                    {isOptimizing ? (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                            </svg>
+                                                            <span>Đang tối ưu hóa...</span>
+                                                        </span>
+                                                    ) : (
+                                                        <span>Thực Thi Tối Ưu Hóa</span>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {optimizedResult && (
+                                                <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 relative group mt-4">
+                                                    <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                                                        <span className="text-[10px] font-bold text-ai-cyan uppercase tracking-wider">Kết quả đầu ra</span>
+                                                        <button 
+                                                            onClick={() => copyToClipboard(optimizedResult)}
+                                                            className="flex items-center space-x-1 text-xs bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition"
+                                                        >
+                                                            <Icons.Copy />
+                                                            <span>Copy Prompt</span>
+                                                        </button>
+                                                    </div>
+                                                    <div className="prose prose-invert max-w-none text-xs text-slate-300 leading-relaxed overflow-x-auto whitespace-pre-wrap max-h-96">
+                                                        {optimizedResult}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* TOOL 2: COPILOT INSTRUCTIONS BUILDER */}
+                                    {labTool === "copilot-ins" && (
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
+                                            <div className="border-b border-slate-800 pb-3">
+                                                <h3 className="font-extrabold text-lg text-slate-100 flex items-center gap-2">
+                                                    <Icons.Book /> Trình Sinh File Cấu Hình Instructions Tự Động (Stage 6)
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    Tự động thiết lập nội dung tệp tin `.github/copilot-instructions.md` dựa trên cấu hình công nghệ của riêng bạn nhằm buộc Copilot sinh code đúng chuẩn dự án.
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Ngôn ngữ lập trình:</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={techLanguage}
+                                                        onChange={(e) => setTechLanguage(e.target.value)}
+                                                        className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 text-xs text-slate-200"
+                                                        placeholder="Ví dụ: TypeScript, Python, Go..."
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Framework chủ đạo:</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={techFramework}
+                                                        onChange={(e) => setTechFramework(e.target.value)}
+                                                        className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 text-xs text-slate-200"
+                                                        placeholder="Ví dụ: NestJS, FastAPI, NextJS App Router..."
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Phong cách code & Kiến trúc dự án:</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={codingStyle}
+                                                    onChange={(e) => setCodingStyle(e.target.value)}
+                                                    className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 text-xs text-slate-200"
+                                                    placeholder="Ví dụ: SOLID, Clean Architecture, Functional Programming..."
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-end">
+                                                <button 
+                                                    onClick={handleGenerateInstructions}
+                                                    disabled={isGeneratingIns || !apiKey}
+                                                    className="px-5 py-2.5 bg-gradient-to-r from-ai-600 to-ai-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center space-x-2"
+                                                >
+                                                    {isGeneratingIns ? (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                            </svg>
+                                                            <span>Đang khởi tạo...</span>
+                                                        </span>
+                                                    ) : (
+                                                        <span>Sinh File Cấu Hình Instructions</span>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {instructionResult && (
+                                                <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 mt-4 relative">
+                                                    <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                                                        <span className="text-[10px] font-bold text-ai-cyan uppercase tracking-wider">.github/copilot-instructions.md</span>
+                                                        <button 
+                                                            onClick={() => copyToClipboard(instructionResult)}
+                                                            className="flex items-center space-x-1 text-xs bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition"
+                                                        >
+                                                            <Icons.Copy />
+                                                            <span>Sao chép nội dung</span>
+                                                        </button>
+                                                    </div>
+                                                    <div className="prose prose-invert max-w-none text-xs text-slate-300 leading-relaxed overflow-x-auto whitespace-pre-wrap max-h-96">
+                                                        {instructionResult}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* TOOL 3: SECURITY SCANNER & UNIT TEST GENERATOR */}
+                                    {labTool === "tester" && (
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
+                                            <div className="border-b border-slate-800 pb-3">
+                                                <h3 className="font-extrabold text-lg text-slate-100 flex items-center gap-2">
+                                                    <Icons.Shield /> Trình Quét Bảo Mật & Sinh Unit Test Toàn Diện (Stage 5)
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    Dán tệp tin mã nguồn (JS/TS/Python/Go/Java) của bạn vào đây. Gemini sẽ phân tích bảo mật đồng thời xây dựng một bộ Test Suite tối ưu hóa bao phủ các trường hợp biên.
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Mã Nguồn Cần Kiểm Tra:</label>
+                                                <textarea 
+                                                    value={sourceCode}
+                                                    onChange={(e) => setSourceCode(e.target.value)}
+                                                    placeholder="Dán mã nguồn của bạn vào đây..."
+                                                    rows={6}
+                                                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-ai-500 text-xs font-mono text-slate-200 placeholder-slate-600"
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-end">
+                                                <button 
+                                                    onClick={handleReviewAndTest}
+                                                    disabled={isTesting || !apiKey}
+                                                    className="px-5 py-2.5 bg-gradient-to-r from-ai-600 to-ai-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center space-x-2"
+                                                >
+                                                    {isTesting ? (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                            </svg>
+                                                            <span>Đang phân tích & kiểm thử...</span>
+                                                        </span>
+                                                    ) : (
+                                                        <span>Bắt Đầu Kiểm Tra</span>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {testResult && (
+                                                <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 mt-4 relative">
+                                                    <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                                                        <span className="text-[10px] font-bold text-ai-cyan uppercase tracking-wider">Báo cáo bảo mật & Test Suite</span>
+                                                        <button 
+                                                            onClick={() => copyToClipboard(testResult)}
+                                                            className="flex items-center space-x-1 text-xs bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition"
+                                                        >
+                                                            <Icons.Copy />
+                                                            <span>Sao chép kết quả</span>
+                                                        </button>
+                                                    </div>
+                                                    <div className="prose prose-invert max-w-none text-xs text-slate-300 leading-relaxed overflow-x-auto whitespace-pre-wrap max-h-96">
+                                                        {testResult}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                </div>
+
+                            </div>
+                        )}
+
+                    </main>
+
+                    {/* FOOTER */}
+                    <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-slate-900 text-center text-xs text-slate-500 space-y-2">
+                        <p>© 2026 AI & GitHub Copilot Mastery Roadmap. Giáo trình chuẩn hóa chuyên nghiệp tích hợp Gemini API.</p>
+                        <p>Dữ liệu huấn luyện, tiến độ học, và API Key được tự động lưu trữ cục bộ bảo mật thông qua Local Storage của bạn.</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
